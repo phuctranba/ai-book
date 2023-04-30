@@ -1,0 +1,70 @@
+diff --git a/node_modules/react-native-admob-native-ads/android/build.gradle b/node_modules/react-native-admob-native-ads/android/build.gradle
+index be307ad..fb02668 100755
+--- a/node_modules/react-native-admob-native-ads/android/build.gradle
++++ b/node_modules/react-native-admob-native-ads/android/build.gradle
+@@ -53,9 +53,9 @@ repositories {
+ 
+ dependencies {
+     implementation 'com.facebook.react:react-native:+'
+-    implementation "com.google.android.gms:play-services-ads:${safeExtGet('googlePlayServicesAdsVersion', '20.+')}"
++    implementation "com.google.android.gms:play-services-ads:${safeExtGet('googlePlayServicesAdsVersion', '21.+')}"
+     implementation 'com.android.support:support-annotations:28.0.0'
+-    implementation 'com.google.ads.mediation:facebook:6.+'
++    implementation 'com.google.ads.mediation:facebook:6.11.+'
+     implementation 'androidx.appcompat:appcompat:1.2.0'
+     implementation 'com.android.support.constraint:constraint-layout:2.0.4'
+ }
+\ No newline at end of file
+diff --git a/node_modules/react-native-admob-native-ads/android/src/main/java/com/ammarahmed/rnadmob/nativeads/RNAdmobNativeView.java b/node_modules/react-native-admob-native-ads/android/src/main/java/com/ammarahmed/rnadmob/nativeads/RNAdmobNativeView.java
+index 1d97ca6..6e1113a 100644
+--- a/node_modules/react-native-admob-native-ads/android/src/main/java/com/ammarahmed/rnadmob/nativeads/RNAdmobNativeView.java
++++ b/node_modules/react-native-admob-native-ads/android/src/main/java/com/ammarahmed/rnadmob/nativeads/RNAdmobNativeView.java
+@@ -125,6 +125,13 @@ public class RNAdmobNativeView extends LinearLayout {
+ 
+             if (ad != null) {
+                 nativeAd = ad;
++                nativeAd.setOnPaidEventListener(adValue -> {
++                    WritableMap paidEvent = Arguments.createMap();
++                    paidEvent.putString("currencyCode", adValue.getCurrencyCode());
++                    paidEvent.putDouble("code", adValue.getValueMicros()/ 1000000.0);
++
++                    sendEvent(RNAdmobNativeViewManager.EVENT_AD_FAILED_TO_LOAD, paidEvent);
++                });
+                 setNativeAd();
+             }
+             loadingAd = false;
+diff --git a/node_modules/react-native-admob-native-ads/index.d.ts b/node_modules/react-native-admob-native-ads/index.d.ts
+index d9b497f..f09e7a2 100644
+--- a/node_modules/react-native-admob-native-ads/index.d.ts
++++ b/node_modules/react-native-admob-native-ads/index.d.ts
+@@ -273,6 +273,21 @@ type NestedTextProps = {
+   allowFontScaling?: boolean;
+ };
+ 
++type CallToActionViewProps = NestedTextProps & {
++  buttonAndroidStyle?: {
++    /**
++     * Only 6 digit hex colors are supported. Example: #f0f0f0
++     */
++    backgroundColor?: string;
++    /**
++     * Only 6 digit hex colors are supported. Example: #f0f0f0
++     */
++    borderColor?: string;
++    borderWidth?: number;
++    borderRadius?: number;
++  };
++};
++
+ type StarViewProps = {
+   style?: StyleProp<ViewStyle>;
+   size?: number;
+@@ -446,7 +461,7 @@ declare module "react-native-admob-native-ads" {
+    * work since they have no effect. Native side does not recieve the call hence simple
+    * Text Component is used to receive the clicks.
+    */
+-  export function CallToActionView(props: NestedTextProps): JSX.Element;
++  export function CallToActionView(props: CallToActionViewProps): JSX.Element;
+ 
+   /**
+    * A Star Rating View to show the star rating for the app ads that you might recieve from

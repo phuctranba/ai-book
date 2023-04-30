@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "994449083546",
+    "project_id": "ai-book-cdbc5",
+    "storage_bucket": "ai-book-cdbc5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:994449083546:android:bdf88c6dadd7ec3d216323",
+        "android_client_info": {
+          "package_name": "com.zipenter.aibook"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "994449083546-let4d6vbqgs7bmgicmjki79fa72h9peg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKo8YkNKkM8BDY2rZ0XaHOzj1E21c8jsg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "994449083546-let4d6vbqgs7bmgicmjki79fa72h9peg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

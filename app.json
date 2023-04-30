@@ -1,0 +1,8 @@
+{
+  "name": "ai_chat",
+  "displayName": "ai_chat",
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-9764638132493814~9617577901",
+    "ios_app_id": "ca-app-pub-9764638132493814~1213308422"
+  }
+}

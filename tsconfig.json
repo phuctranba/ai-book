@@ -1,0 +1,66 @@
+// prettier-ignore
+{
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "paths": {
+      "tslib" : ["./node_modules/tslib/tslib.d.ts"],
+      "assets/*": [
+        "./assets/*"
+      ],
+      "store/*": [
+        "./store/*"
+      ],
+      "constants/*": [
+        "./constants/*"
+      ],
+      "helpers/*": [
+        "./helpers/*",
+      ],
+      "models/*": [
+        "./models/*"
+      ],
+      "components/*": [
+        "./components/*"
+      ],
+      "navigation/*": [
+        "./navigation/*"
+      ],
+      "screens/*": [
+        "./screens/*"
+      ],
+      "ui/*": [
+        "./ui/*"
+      ],
+      "configs/*": [
+        "./configs/*"
+      ],
+    },
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
+    "jsx": "react-native",
+    "lib": [
+      "es2017"
+    ],
+    "module": "ES2022",
+    "removeComments": true,
+    "moduleResolution": "node",
+    "noEmitHelpers": true,
+    "noImplicitReturns": true,
+    "esModuleInterop": false,
+    "noUnusedLocals": true,
+    "sourceMap": false,
+    "strict": true,
+    "target": "es2017",
+    "noImplicitAny": false,
+    "resolveJsonModule": true
+  },
+  "exclude": [
+    "node_modules",
+    "babel.config.js",
+    "metro.config.js",
+    "jest.config.js"
+  ]
+}
+
