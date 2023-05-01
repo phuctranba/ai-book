@@ -1,9 +1,9 @@
-import React, {forwardRef, memo, useCallback, useImperativeHandle, useRef, useState} from 'react';
+import React, {forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, useState} from 'react';
 import {Keyboard, Pressable, StyleSheet, TextInput, View} from 'react-native';
 import {Device} from "ui/device.ui";
 import {FontSizes, HS, MHS, VS} from "ui/sizes.ui";
 import {useDisplayAds, useSystem} from "helpers/system.helper";
-import {HIT_SLOP_EXPAND_20} from "constants/system.constant";
+import {HIT_SLOP_EXPAND_10, HIT_SLOP_EXPAND_20} from "constants/system.constant";
 import {useNavigation} from "@react-navigation/native";
 import {IconClose, IconLeft, IconMenu} from "assets/svgIcons";
 import {RootColor, SystemTheme} from "ui/theme";
@@ -32,12 +32,18 @@ const Header = forwardRef(({
     const [valueSearch, setValueSearch] = useState<string>("")
     const [isFocus, setIsFocus] = useState<boolean>(false)
     const refInputSearch = useRef<any>()
-    const {displayAlertAds} = useDisplayAds()
+    const {displayAlertAds, free_book} = useDisplayAds()
     const refValueSearch = useRef<string>("")
     const freeSummaryCount = useAppSelector(state => state.system.freeSummaryCount)
     const dispatch = useAppDispatch()
     const navigation: any = useNavigation()
     const fontName = useAppSelector(state => state.system.fontName)
+    const isPremium = useAppSelector(state => state.system.isPremium)
+    const refIsPremium = useRef(isPremium)
+
+    useEffect(()=>{
+        refIsPremium.current = isPremium
+    },[isPremium])
 
     useImperativeHandle(
         ref,
@@ -73,7 +79,7 @@ const Header = forwardRef(({
     const LeftIcon = useCallback(() => {
         if (isFocus) {
             return (
-                <Pressable onPress={onBack}>
+                <Pressable onPress={onBack} hitSlop={HIT_SLOP_EXPAND_20}>
                     <IconLeft size={MHS._20} color={theme.text}/>
                 </Pressable>
             )
@@ -90,7 +96,7 @@ const Header = forwardRef(({
     }, [isFocus, theme])
 
     const onPressSubmit = useCallback(() => {
-        if (freeSummaryCount > 0) {
+        if (freeSummaryCount > 0 || refIsPremium.current) {
             navigationHelper.navigate(NAVIGATION_SUMMARY_SCREEN, {
                 book: {
                     "volumeInfo": {
@@ -112,9 +118,9 @@ const Header = forwardRef(({
     const onAddFreeBook = useCallback((item?:TypedBook) => {
         displayAlertAds({
             title: languages.homeScreen.moreBook,
-            message: languages.homeScreen.adsMoreBook.replace(":count", `${3}`),
+            message: languages.homeScreen.adsMoreBook.replace(":count", `${free_book}`),
             callback: () => {
-                dispatch(setFreeSummaryCount(3))
+                dispatch(setFreeSummaryCount(free_book))
                 if(item){
                     navigationHelper.navigate(NAVIGATION_SUMMARY_SCREEN, {
                         book: item
@@ -128,19 +134,30 @@ const Header = forwardRef(({
     const RightIcon = useCallback(() => {
         if (isFocus) {
             return (
-                <Pressable onPress={onPressSubmit} style={styles.btnSummary}>
+                <Pressable onPress={onPressSubmit} style={styles.btnSummary} hitSlop={HIT_SLOP_EXPAND_20}>
                     <TextBase title={languages.homeScreen.summary} fontSize={FontSizes._12} color={theme.textLight} fontWeight={"bold"}/>
                 </Pressable>
             )
-        } else return (
-            <Pressable onPress={onAddFreeBook} style={styles.btnPremium}>
-                <TextBase title={freeSummaryCount + " 📖 " + languages.homeScreen.free} fontSize={FontSizes._12}
-                          color={theme.textLight} fontWeight={"bold"}/>
-            </Pressable>
-        )
+        } else{
+            if(refIsPremium.current){
+                return(
+                        <TextBase title={"PREMIUM\n∞ 📖"} fontSize={FontSizes._10}
+                                  style={{textAlign:'center'}}
+                                  color={RootColor.PremiumColor} fontWeight={"900"}/>
+                )
+            }else {
+               return(
+                   <Pressable onPress={onAddFreeBook} style={styles.btnPremium} hitSlop={HIT_SLOP_EXPAND_20}>
+                       <TextBase title={freeSummaryCount + " 📖 " + languages.homeScreen.free} fontSize={FontSizes._12}
+                                 color={theme.textLight} fontWeight={"bold"}/>
+                   </Pressable>
+               )
+            }
+        }
     }, [isFocus, theme, freeSummaryCount])
 
     const onFocus = useCallback(() => {
+        onEventSearchCalled("c47b79xn2x8z209xcn27n")
         setIsFocusInSearchBar(true);
         setIsFocus(true)
     }, [])

@@ -2,16 +2,22 @@ import TextBase from 'components/TextBase';
 import {useSystem} from 'helpers/system.helper';
 import {languages} from 'languages';
 import React, {useCallback, useRef, useState} from 'react';
-import {FlatList, RefreshControl, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {FlatList, StyleSheet, TouchableOpacity, View} from 'react-native';
 import {Device} from 'ui/device.ui';
-import {HS, MHS, VS} from 'ui/sizes.ui';
-import {SystemTheme} from 'ui/theme';
+import {FontSizes, HS, MHS, VS} from 'ui/sizes.ui';
+import {RootColor, SystemTheme} from 'ui/theme';
 import ItemHistory from "screens/history/component/item.history";
 import HeaderHistory from "screens/history/component/header.history";
 import SearchResultModalHistory from "screens/history/component/searchResultModal.history";
-import {TypedBookSummary} from "models/book.modal";
+import {TypedBook, TypedBookSummary} from "models/book.modal";
 import {getAllBook} from "helpers/sqlite.helper";
 import {useFocusEffect} from "@react-navigation/native";
+import LottieView from "lottie-react-native";
+import {searchBook} from "../../services/book.service";
+import {randomKeyWord} from "helpers/string.helper";
+import ItemSuggestHistory from "screens/history/component/itemSuggest.history";
+
+const EMPTY = require("assets/lotties/empty.json")
 
 const HistoryScreen = () => {
     const {styles} = useSystem(createStyles)
@@ -19,11 +25,25 @@ const HistoryScreen = () => {
     const refHeaderHistory = useRef<any>()
     const refSearchResultModalHistory = useRef<any>()
     const [data, setData] = useState<TypedBookSummary[]>([])
+    const [dataSuggestBook, setDataSuggestBook] = useState<TypedBook[]>([])
 
     useFocusEffect(useCallback(() => {
         getAllBook()
-            .then(setData)
-            .catch(console.log)
+            .then((result) => {
+                if (result.length > 0) {
+                    setData(result)
+                } else {
+                    searchBook({page: 1, search: randomKeyWord()})
+                        .then(setDataSuggestBook)
+                        .catch(console.log)
+                }
+            })
+            .catch((error) => {
+                console.log(error)
+                searchBook({page: 1, search: randomKeyWord()})
+                    .then(setDataSuggestBook)
+                    .catch(console.log)
+            })
     }, []))
 
     const onSearch = useCallback((text: string) => {
@@ -36,16 +56,35 @@ const HistoryScreen = () => {
         )
     }
 
+
+    const renderItemSuggest = ({item}: { item: TypedBook, index: number }) => {
+        return (
+            <ItemSuggestHistory item={item}/>
+        )
+    }
+
     const ListEmptyComponent = () => {
         return (
             <View style={styles.containerEmpty}>
-                <TextBase title={languages.homeScreen.listBookEmpty} fontSize={18}/>
+                <LottieView source={EMPTY}
+                            autoPlay
+                            loop
+                            speed={1.5}
+                            colorFilters={[{
+                                keypath: 'face', color: RootColor.MainColor
+                            }]}
+                            style={styles.emptyLottie}/>
+                <TextBase title={languages.homeScreen.listBookEmpty} style={{textAlign: 'center'}} fontSize={18}/>
             </View>
         )
     }
 
     const closeSearch = useCallback(() => {
         refHeaderHistory.current?.onBack()
+    }, [])
+
+    const onBlur = useCallback(() => {
+        refHeaderHistory.current?.onBlur()
     }, [])
 
     return (
@@ -61,24 +100,47 @@ const HistoryScreen = () => {
                 style={{flex: 1}}
                 extraData={data}
                 showsVerticalScrollIndicator={false}
-                keyExtractor={(item: TypedBookSummary) => item.id||""}
+                keyExtractor={(item: TypedBookSummary) => item.id || ""}
                 renderItem={renderItem}
                 ListEmptyComponent={ListEmptyComponent}
-                refreshControl={
-                    <RefreshControl refreshing={false} onRefresh={() => {
-                    }}/>
-                }
             />
 
             {
-                (data.length===0 && !isFocusInSearchBar)&&
-                <TouchableOpacity activeOpacity={0.8} style={styles.buttonView} onPress={()=>refHeaderHistory.current?.onFocusFind()}>
-                    <TextBase title={languages.drawerContent.findABook} fontSize={16} fontWeight='600' />
-                </TouchableOpacity>
+                (data.length === 0 && !isFocusInSearchBar) &&
+                <View>
+                    <TextBase title={languages.homeScreen.maybeYouLiked}
+                              style={{
+                                  marginHorizontal: HS._12,
+                                  marginBottom: VS._12,
+                                  textAlign: 'center',
+                                  alignSelf: 'flex-start'
+                              }}
+                              fontWeight={'900'}
+                              color={RootColor.MainColor}
+                              fontSize={FontSizes._16}/>
+                    <FlatList
+                        data={dataSuggestBook}
+                        horizontal
+                        style={{marginBottom: VS._20}}
+                        contentContainerStyle={{paddingHorizontal: HS._8}}
+                        extraData={dataSuggestBook}
+                        showsHorizontalScrollIndicator={false}
+                        keyExtractor={(item: TypedBook) => item.etag || ""}
+                        renderItem={renderItemSuggest}
+                        ListEmptyComponent={ListEmptyComponent}
+                    />
+
+                    <TouchableOpacity activeOpacity={0.8} style={styles.buttonView}
+                                      onPress={() => refHeaderHistory.current?.onFocusFind()}>
+                        <TextBase title={languages.drawerContent.findABook} fontSize={16} fontWeight='600'/>
+                    </TouchableOpacity>
+                </View>
+
             }
 
             <SearchResultModalHistory ref={refSearchResultModalHistory}
                                       closeSearch={closeSearch}
+                                      onBlur={onBlur}
                                       isFocusInSearchBar={isFocusInSearchBar}/>
         </View>
     )
@@ -94,14 +156,17 @@ const createStyles = (theme: SystemTheme) => {
             paddingHorizontal: HS._16,
             paddingVertical: HS._10
         },
+        emptyLottie: {
+            width: '100%'
+        },
         buttonView: {
-            marginBottom: Device.paddingBottom*2,
+            marginBottom: Device.paddingBottom * 2,
             // height: VS._44,
-            paddingVertical:VS._12,
-            width:'80%',
+            paddingVertical: VS._14,
+            width: '80%',
             justifyContent: "center",
             alignItems: "center",
-            alignSelf:'center',
+            alignSelf: 'center',
             backgroundColor: theme.backgroundMain,
             borderRadius: MHS._10,
         },
@@ -115,9 +180,6 @@ const createStyles = (theme: SystemTheme) => {
         containerEmpty: {
             justifyContent: "center",
             alignItems: 'center',
-            flex: 1,
-            opacity: 1,
-            height:Device.heightScreen*0.8
         },
         viewInput: {
             flexDirection: 'row',

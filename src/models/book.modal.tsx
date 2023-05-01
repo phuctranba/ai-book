@@ -15,5 +15,6 @@ export interface TypedBook {
 
 export interface TypedBookSummary extends TypedBook{
     dateSummary: string,
-    summaryContent: string
+    summaryContent: string,
+    isNormalSummary: boolean
 }

@@ -1,5 +1,5 @@
 import React, {forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef} from 'react';
-import {FlatList, Pressable, StyleSheet, View} from 'react-native';
+import {FlatList, Keyboard, Pressable, StyleSheet, View} from 'react-native';
 import {useDisplayAds, useSystem} from "helpers/system.helper";
 import {FontSizes, HS, MHS, VS} from "ui/sizes.ui";
 import {SystemTheme} from "ui/theme";
@@ -14,23 +14,37 @@ import {NAVIGATION_SUMMARY_SCREEN} from "constants/router.constant";
 import {setFreeSummaryCount} from "store/reducer/system.reducer.store";
 import {useAppDispatch, useAppSelector} from "configs/store.config";
 import {getBookById} from "helpers/sqlite.helper";
+import {randomKeyWord, randomWord} from "helpers/string.helper";
 
 interface TypedHistorySearchProps {
     isFocusInSearchBar: boolean;
     closeSearch: () => void
+    onBlur: () => void
 }
 
 const DEFAULT_IMAGE = require('assets/images/book-default.png')
 
-const SearchResultModal = forwardRef(({isFocusInSearchBar, closeSearch}: TypedHistorySearchProps, ref) => {
+const SearchResultModal = forwardRef(({isFocusInSearchBar, closeSearch, onBlur}: TypedHistorySearchProps, ref) => {
     const {styles, theme} = useSystem(createStyles);
     const refValueSearch = useRef<string>("")
     const freeSummaryCount = useAppSelector(state => state.system.freeSummaryCount)
-    const {displayAlertAds} = useDisplayAds()
+    const {displayAlertAds, free_book} = useDisplayAds()
     const dispatch = useAppDispatch()
+    const isPremium = useAppSelector(state => state.system.isPremium)
+    const refIsPremium = useRef(isPremium)
+
+    useEffect(()=>{
+        refIsPremium.current = isPremium
+    },[isPremium])
 
     const getListBook = useCallback(async (page: number) => {
-        if (refValueSearch.current === "") return []
+        if (refValueSearch.current === ""){
+            return []
+        }
+
+        if (refValueSearch.current === "c47b79xn2x8z209xcn27n"){
+                refValueSearch.current = randomKeyWord()
+        }
 
         return await searchBook({page, search: refValueSearch.current})
     }, [])
@@ -63,14 +77,15 @@ const SearchResultModal = forwardRef(({isFocusInSearchBar, closeSearch}: TypedHi
     const onAddFreeBook = useCallback((item: TypedBook) => {
         displayAlertAds({
             title: languages.homeScreen.moreBook,
-            message: languages.homeScreen.adsMoreBook.replace(":count", `${3}`),
+            message: languages.homeScreen.adsMoreBook.replace(":count", `${free_book}`),
             callback: () => {
-                dispatch(setFreeSummaryCount(3))
+                dispatch(setFreeSummaryCount(free_book))
                 navigationHelper.navigate(NAVIGATION_SUMMARY_SCREEN, {book: item})
                 closeSearch()
             }
         })
     }, [])
+
     const onPressItem = useCallback((item: TypedBook) => {
         getBookById(item.id || "abc")
             .then((result) => {
@@ -78,7 +93,7 @@ const SearchResultModal = forwardRef(({isFocusInSearchBar, closeSearch}: TypedHi
                 closeSearch()
             })
             .catch(() => {
-                if (freeSummaryCount > 0) {
+                if (freeSummaryCount > 0 || refIsPremium.current) {
                     navigationHelper.navigate(NAVIGATION_SUMMARY_SCREEN, {book: item})
                     closeSearch()
                 } else {
@@ -118,10 +133,14 @@ const SearchResultModal = forwardRef(({isFocusInSearchBar, closeSearch}: TypedHi
     const ListEmptyComponent = () => {
         return (
             <View style={[styles.containerEmpty]}>
-                <TextBase title={languages.homeScreen.listBookEmpty} fontSize={18}/>
+                <TextBase title={languages.homeScreen.listBookEmpty} style={{textAlign:'center'}} fontSize={18}/>
             </View>
         )
     }
+
+    const onScroll = useCallback(()=>{
+        Keyboard.dismiss();
+    },[])
 
     if (!isFocusInSearchBar)
         return null;
@@ -129,6 +148,7 @@ const SearchResultModal = forwardRef(({isFocusInSearchBar, closeSearch}: TypedHi
     return (
         <View style={styles.container}>
             <FlatList
+                onScroll={onScroll}
                 style={styles.scrollView}
                 data={listData}
                 keyboardShouldPersistTaps={'always'}

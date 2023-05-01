@@ -54,3 +54,18 @@ export function opacity(color: string, opacity: number): string {
   const _opacity = Math.round(Math.min(Math.max(opacity || 1, 0), 1) * 255);
   return color + _opacity.toString(16).toUpperCase();
 }
+
+export function randomString(length) {
+  let result           = '';
+  let characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let charactersLength = characters.length;
+  for ( let i = 0; i < length; i++ ) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
+const keyWords = 'To Kill a Mockingbird Pride and Prejudice Great Gatsby Crime and Punishment One Hundred Years Solitude Catcher in Rye Moby Dick Wring Heights War and Peace Odyssey Brrs Karamazov Adventures Huckleberry Finn Divine Comedy Lord Rings Jane Eyre Don Quixote Iliad Dracula Les Miserables Anna Karenina Frankenstein Picture Dorian Gray Heart Darkness A Tale Two Cities Sound and Fury Brave New World Lolita Great Expectations Grapes Wrath Dubliners Canterbury Tales Ulysses Color Purple Sun Also Rises Old Man and Sea A Clockwork Orange Stranger Mice and Men For Whom Bell Tolls Siddharthair Eyes Were Watching God Invisible Man Hitchhiker Guide to Galaxy Bell Jar Awakening War Worlds A Separate Peace A Passage to India East Eden Beloved Watership Down A Brief History Time Things Fall Apart Little Prince Road Martian Picture Dorian Gray Diary a Young Girl Outsiders Slaughterhouse Five Catch Fountainhead Atlas Shrugged Scarlet Letter Joy Luck Club Adventures Sherlock Holmes Secret Garden Wind in Willows Hobbit Lion Witch and Wardrobe Harry Potter and Philosopher Stone Hunger Games Girl with Dragon Tattoo Da Vinci Code Hitchhiker Guide to Galaxy Alchemist God Small of Things Book Thief Kite Runner Help Lovely Bones Time Traveler Wife Curious Incident Dog in Night Time Catcher in Rye the'.split(" ")
+
+export function randomKeyWord() {
+  return keyWords[Math.floor(Math.random()*keyWords.length)];
+}

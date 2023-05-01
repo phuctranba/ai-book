@@ -7,7 +7,7 @@ import navigationHelper from 'helpers/navigation.helper';
 import {logEventAnalytics, useDisplayAds, useSystem} from 'helpers/system.helper';
 import {languages} from 'languages';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {Pressable, StyleSheet, View} from 'react-native';
+import {Keyboard, Pressable, StyleSheet, View} from 'react-native';
 import NativeAdView, {
     AdBadge,
     CallToActionView,
@@ -25,15 +25,20 @@ import {TypedBookSummary} from "models/book.modal";
 const DEFAULT_IMAGE = require('assets/images/book-default.png')
 
 
-const RoomChatListComponent = ({item, index}: { item: TypedBookSummary, index: number }) => {
+const ItemHistory = ({item, index}: { item: TypedBookSummary, index: number }) => {
     const {styles, theme} = useSystem(createStyles)
-    const {isPremium} = useAppSelector(state => state.system)
     const {nativeAdsId, native_ads_pre, native_ads_list} = useDisplayAds()
     const nativeAdViewRef = useRef<NativeAdView>(null)
     const [dataAds, setDataAds] = useState<any>()
     const dispatch = useAppDispatch()
     const collectedImpresstion = useRef(false)
     const refShouldReLoadAds = useRef<boolean>(true)
+    const isPremium = useAppSelector(state => state.system.isPremium)
+    const refIsPremium = useRef(isPremium)
+
+    useEffect(()=>{
+        refIsPremium.current = isPremium
+    },[isPremium])
 
     useEffect(() => {
         if (nativeAdsId && refShouldReLoadAds.current && native_ads_list) {
@@ -95,7 +100,7 @@ const RoomChatListComponent = ({item, index}: { item: TypedBookSummary, index: n
     //////////////
 
     const renderAds = () => {
-        if (isPremium || !native_ads_list || (index != 0 && index != 2)) {
+        if (refIsPremium.current || !native_ads_list || (index != 0 && index != 2)) {
             return null
         }
 
@@ -160,6 +165,12 @@ const RoomChatListComponent = ({item, index}: { item: TypedBookSummary, index: n
     }
 
     const onPressItem = () => {
+        Keyboard.dismiss();
+        if(refIsPremium.current){
+            onConfirmPressItem()
+            return;
+        }
+
         if (native_ads_pre) {
             GlobalPopupHelper.alertAdsRef.current?.alert({
                 title: languages.homeScreen.seeConversation,
@@ -234,4 +245,4 @@ const createStyles = (theme: SystemTheme) => {
     })
 }
 
-export default RoomChatListComponent;
+export default ItemHistory;

@@ -5,7 +5,7 @@ import {TypedBookSummary} from "models/book.modal";
 export async function insertBook(book: TypedBookSummary) {
     try {
         DB.transaction(function (tx) {
-            tx.executeSql(`INSERT INTO ${TABLE_BOOK} (id, dateSummary, content) VALUES (?,?,?)`,
+            tx.executeSql(`INSERT OR REPLACE INTO ${TABLE_BOOK} (id, dateSummary, content) VALUES (?,?,?)`,
                 [book.id, book.dateSummary, JSON.stringify(book)]);
         }, function (error) {
             console.log(`Insert ${TABLE_BOOK} ERROR: ${error.message}`);
@@ -142,7 +142,7 @@ export const TABLE_BOOK = "TABLE_BOOK";
 export async function createDB() {
     return new Promise((resolve, reject) => {
         DB.transaction(function (tx) {
-            tx.executeSql("CREATE TABLE IF NOT EXISTS " + TABLE_BOOK + " (id, dateSummary, content)");
+            tx.executeSql("CREATE TABLE IF NOT EXISTS " + TABLE_BOOK + " (id TEXT PRIMARY KEY, dateSummary TEXT NOT NULL, content TEXT NOT NULL)");
         }, function (error) {
             console.log("Populated database ERROR: " + error.message);
         }, function () {
@@ -154,7 +154,7 @@ export async function createDB() {
 export async function createTableChatRoom(tableName: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
         DB.transaction(function (tx) {
-            tx.executeSql("CREATE TABLE IF NOT EXISTS " + tableName + " (id, type, message)");
+            tx.executeSql("CREATE TABLE IF NOT EXISTS " + tableName + " (id TEXT PRIMARY KEY, type TEXT NOT NULL, message TEXT NOT NULL)");
             resolve(true)
         }, function (error) {
             console.log("createTableChatRoom ERROR: " + tableName + " " + error.message);

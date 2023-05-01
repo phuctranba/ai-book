@@ -22,12 +22,12 @@ const {width, height} = Dimensions.get("window");
 export const LANGUAGE_SYSTEM = languages.getInterfaceLanguage()
 
 export const SUBSCRIPTIONS = Platform.select({
-    android: ["com.iceo.aichat.subscription.month"],
-    ios: ["com.iceo.aichat.subscription.1month"]
+    android: ["com.zipenter.aibook.subscription.month"],
+    ios: ["com.zipenter.aibook.subscription.1month"]
 }) || []
 export const SUBSCRIPTIONS_VN = ["com.iceo.aichat.subscription.vn.month"]
 
-export const PRODUCTS = ["com.iceo.aichat.donate.2usd", "com.iceo.aichat.donate.1usd"]
+export const PRODUCTS = ["com.zipenter.aibook.donate.1usd", "com.zipenter.aibook.donate.5usd"]
 
 
 const [short, long] = width > height ? [height, width] : [width, height]
@@ -160,6 +160,7 @@ export const useDisplayAds = () => {
           if (reward_ads) {
             GlobalPopupHelper.adsRewardRef.current?.showAds(() => {
               setTimeout(() => {
+                  console.log(languages.unlockPremiumFeature,"languages.unlockPremiumFeature")
                 alertAfter?.alert({
                   title: languages.unlockPremiumFeature,
                   message: languages.successfulAward,

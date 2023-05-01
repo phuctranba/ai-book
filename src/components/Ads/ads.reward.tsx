@@ -11,6 +11,7 @@ const AdsRewardComponent = (_, ref: React.Ref<TypedAdsRef>) => {
     const {reward_ads, rewardAdsId} = useDisplayAds()
     const rewardRef = useRef<any>()
     const isLoadedConfig = useAppSelector(state => state.control.isLoadedConfig)
+    const isPremium = useAppSelector(state => state.system.isPremium)
 
     useImperativeHandle(ref, () => ({
         showAds: (cb) => {
@@ -28,6 +29,10 @@ const AdsRewardComponent = (_, ref: React.Ref<TypedAdsRef>) => {
     }
 
     if (!reward_ads) {
+        return null
+    }
+
+    if(isPremium){
         return null
     }
 

@@ -15,7 +15,7 @@ import {
     NAVIGATION_SETTING_FONT_SIZE,
     NAVIGATION_SETTING_SPEED,
     NAVIGATION_SETTING_FONT,
-    NAVIGATION_SETTINGS_THEME
+    NAVIGATION_SETTINGS_THEME, NAVIGATION_PREMIUM_SERVICE_SCREEN, NAVIGATION_PREMIUM_SUCCESS_SCREEN
 } from 'constants/router.constant';
 import {useDisplayAds, useSystem} from 'helpers/system.helper';
 import {languages} from 'languages';
@@ -38,6 +38,9 @@ import SettingsFontSizeScreen from "screens/settingFontSize/settingsFontSize.scr
 import SettingsSpeedScreen from "screens/settingSpeed/settingsSpeed.screen";
 import SettingsFontScreen from "screens/settingFont/settingsFont.screen";
 import SettingsThemeScreen from "screens/settingTheme/settingsTheme.screen";
+import PremiumServiceScreen from "screens/premium/premium.service.screen";
+import PremiumSuccessScreen from "screens/premiumSuccess/premiumSuccess.screen";
+import navigationHelper from "helpers/navigation.helper";
 
 
 const Drawer = createDrawerNavigator();
@@ -94,6 +97,7 @@ const MainNavigator = () => {
     const {native_ads_country} = useDisplayAds()
     const lastChoiceCountry = useAppSelector(state => state.system.lastChoiceCountry)
     const fontName = useAppSelector(state => state.system.fontName)
+    const isPremium = useAppSelector(state => state.system.isPremium)
 
     useEffect(() => {
         if (shouldGoToTrueScreenAfterReConnect) {
@@ -104,13 +108,17 @@ const MainNavigator = () => {
     const navigate = () => {
         console.log("navigate =======================");
 
+        if(isPremium){
+            navigationHelper.replace("DrawerNavigator")
+            return;
+        }
+
         if (native_ads_country && (lastChoiceCountry === undefined || dayjs().diff(dayjs(lastChoiceCountry), "minutes") > 4320)) {
             GlobalPopupHelper.admobGlobalRef.current?.showOpenAds(NAVIGATION_CHOOSE_COUNTRY_SCREEM)
             return;
         }
 
-        console.log("HGoi")
-        GlobalPopupHelper.admobGlobalRef.current?.showOpenAds("DrawerNavigator")
+        GlobalPopupHelper.admobGlobalRef.current?.showOpenAds(NAVIGATION_PREMIUM_SERVICE_SCREEN)
     }
 
     return (
@@ -138,6 +146,20 @@ const MainNavigator = () => {
             <MainStack.Screen
                 name={"DrawerNavigator"}
                 component={DrawerNavigator}
+                options={() => ({
+                    headerShown: false,
+                })}
+            />
+            <MainStack.Screen
+                name={NAVIGATION_PREMIUM_SERVICE_SCREEN}
+                component={PremiumServiceScreen}
+                options={() => ({
+                    headerShown: false,
+                })}
+            />
+            <MainStack.Screen
+                name={NAVIGATION_PREMIUM_SUCCESS_SCREEN}
+                component={PremiumSuccessScreen}
                 options={() => ({
                     headerShown: false,
                 })}

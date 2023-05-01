@@ -23,8 +23,10 @@ interface InitialState {
     tokenFirebase: string
     isConnectedInternet: boolean
     suggestQuestion: boolean
-    fontName:string
+    fontName: string
+    stateToImpression: object
     speedSSEMessage: 1 | 2 | 3 | 4 | 5,
+    useNormalSummary: boolean,
     sizeText: 0.9 | 1 | 1.1 | 1.2 | 1.3,
     firstInstall: {
         language: boolean
@@ -48,6 +50,8 @@ interface InitialState {
         key_reward_ads: string,
         key_open_ads: string,
         chatgpt_key: string
+        key_google_cloud: string
+        free_book: number
     }
     isPremiumTrial: {
         overWord: string
@@ -76,11 +80,13 @@ const initialState: InitialState = {
     language: "en",
     languageVoice: undefined,
     tokenFirebase: "",
+    stateToImpression: {},
     isConnectedInternet: true,
     suggestQuestion: false,
-    speedSSEMessage: 3,
+    speedSSEMessage: 2,
+    useNormalSummary: true,
     sizeText: 1,
-    fontName:"Raleway",
+    fontName: "Raleway",
     firstInstall: {
         language: false,
         isUSUnit: false,
@@ -102,7 +108,9 @@ const initialState: InitialState = {
         key_native_ads: "",
         key_reward_ads: "",
         key_open_ads: "",
-        chatgpt_key: ""
+        chatgpt_key: "",
+        key_google_cloud: "",
+        free_book: -1
     },
     isPremiumTrial: {
         overWord: "",
@@ -161,6 +169,8 @@ export const getSystem = createAsyncThunk(
                 [`key_open_ads_${Platform.OS}`]: "",
                 [`open_ads_${Platform.OS}`]: true,
                 [`chatgpt_key`]: "",
+                [`key_google_cloud`]: "",
+                [`free_book`]: 3,
             })
             .then(() => remoteConfig().fetchAndActivate())
 
@@ -175,6 +185,8 @@ export const getSystem = createAsyncThunk(
         const key_open_ads = remoteConfig().getValue(`key_open_ads_${Platform.OS}`);
         const open_ads = remoteConfig().getValue(`open_ads_${Platform.OS}`);
         const chatgpt_key = remoteConfig().getValue(`chatgpt_key`);
+        const key_google_cloud = remoteConfig().getValue(`key_google_cloud`);
+        const free_book = remoteConfig().getValue(`free_book`);
 
         thunkApi.dispatch(setLoadedConfig())
 
@@ -188,7 +200,9 @@ export const getSystem = createAsyncThunk(
             key_native_ads: __DEV__ ? TestNativeIds.Image : (key_native_ads.asString() || ADS_ID),
             key_reward_ads: __DEV__ ? TestIds.REWARDED : (key_reward_ads.asString() || KEY_REWARD_ADS_MOB),
             key_open_ads: __DEV__ ? TestIds.APP_OPEN : (key_open_ads.asString() || KEY_OPEN_ADS_MOB),
-            chatgpt_key: chatgpt_key.asString() || "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"
+            chatgpt_key: chatgpt_key.asString() || "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",
+            key_google_cloud: key_google_cloud.asString() || "AIzaSyBWVQcb2lWNVv4K-st0_iSxKBZxN69DOZM",
+            free_book: free_book.asNumber() || 3
         })
     },
     {serializeError: serializeAxiosError}
@@ -241,6 +255,12 @@ export const System = createSlice({
             return {
                 ...state,
                 suggestQuestion: action.payload
+            }
+        },
+        setStateToImpression: (state, action) => {
+            return {
+                ...state,
+                stateToImpression: {...state.stateToImpression, ...action.payload}
             }
         },
         setSpeedSSEMessage: (state, action) => {
@@ -311,6 +331,7 @@ export const System = createSlice({
             };
         },
         setFreeSummaryCount: (state, action) => {
+            console.log(action)
             return {
                 ...state,
                 freeSummaryCount: state.freeSummaryCount + action.payload,
@@ -338,6 +359,12 @@ export const System = createSlice({
             return {
                 ...state,
                 enableSpeech: !state.enableSpeech,
+            };
+        },
+        setUseNormalSummary: (state, action) => {
+            return {
+                ...state,
+                useNormalSummary: action.payload
             };
         },
         setEnableSpeech: (state, action) => {
@@ -448,6 +475,7 @@ export const System = createSlice({
             .addMatcher(isFulfilled(getSystem), (state, action) => {
                 return {
                     ...state,
+                    freeSummaryCount: state.config.free_book===-1?action.payload.free_book:state.freeSummaryCount,
                     config: action.payload,
                     nativeAdsId: action.payload?.key_native_ads?.split("#")?.[0],
                     rewardAdsId: action.payload?.key_reward_ads?.split("#")?.[0],
@@ -482,7 +510,9 @@ export const {
     switchAdsId,
     setFreeGiftCount,
     setLastChoiceCountry,
-    setFontName
+    setFontName,
+    setUseNormalSummary,
+    setStateToImpression
 } = System.actions;
 
 // Reducer

@@ -30,7 +30,7 @@ const SettingsScreen = () => {
   }
 
   const onPressPrivacy = async () => {
-    await openURLWebView(`https://www.freeprivacypolicy.com/live/edc280a1-a4ae-4c8b-93b0-a1c32ee6710d`)
+    await openURLWebView(`https://lamthien8x.gitbook.io/ai-book/`)
   }
   const onPressAboutUs = async () => {
     await openURLWebView(`${WEBSITE_FRONTEND}page/about-us`)

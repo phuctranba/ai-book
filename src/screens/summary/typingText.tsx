@@ -15,7 +15,7 @@ const TypingText = forwardRef(({ addMessageToList, speed }: Props, ref) => {
 	const isDone = useRef(false)
 	const timeout = useRef<NodeJS.Timer>()
 
-	const duration = (5 - speed) * 15 + 10
+	const duration = (5 - speed) * 10
 
 	useEffect(() => {
 		if (config.index == 0) {
@@ -55,6 +55,12 @@ const TypingText = forwardRef(({ addMessageToList, speed }: Props, ref) => {
 			} else {
 				setConfig(prev => ({ ...prev }))
 			}
+		},
+		setFullText: (text: string) => {
+			setConfig({
+				text: text,
+				index: 0
+			})
 		},
 		resetText: () => {
 			textMessageProps.current = ""

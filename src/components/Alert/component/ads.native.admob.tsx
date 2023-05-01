@@ -35,13 +35,16 @@ const AdsNativeAdmob = ({onAdClicked, onAddImpression}: Props, ref) => {
 
     useEffect(() => {
         if (readyToShowAds) {
+            console.log("a")
             const interval = setInterval(() => {
                 if (nativeAdViewRef.current) {
+                    console.log("c")
                     clearInterval(interval)
                     nativeAdViewRef.current?.loadAd()
                 }
             }, 50)
         } else {
+            console.log("b")
             setReadyToShowAds(true)
         }
     }, [readyToShowAds])
@@ -57,6 +60,7 @@ const AdsNativeAdmob = ({onAdClicked, onAddImpression}: Props, ref) => {
     useImperativeHandle(ref, () => ({
         onAdFailedToLoad,
         loadAd: () => {
+            console.log("d")
             setDataAds(undefined)
             if (adAlreadyImpression.current) {
                 adAlreadyImpression.current = false

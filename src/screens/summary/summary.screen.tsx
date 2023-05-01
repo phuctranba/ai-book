@@ -1,12 +1,21 @@
-import {RouteProp, useFocusEffect, useNavigation, useRoute} from '@react-navigation/native';
-import {IconCopy, IconShare} from 'assets/svgIcons';
+import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
+import {IconCopy, IconShare, IconSpeaker, IconSpeakerMute} from 'assets/svgIcons';
 import TextBase from 'components/TextBase';
 import {useAppDispatch, useAppSelector} from 'configs/store.config';
 import {HIT_SLOP_EXPAND_10, STORE_LINK} from 'constants/system.constant';
 import {insertBook} from 'helpers/sqlite.helper';
 import {logEventAnalytics, showToast, useDisplayAds, useSystem} from 'helpers/system.helper';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {BackHandler, Pressable, ScrollView, Share, StyleSheet, View} from 'react-native';
+import {
+    ActivityIndicator,
+    DeviceEventEmitter,
+    Pressable,
+    ScrollView,
+    Share,
+    StyleSheet,
+    TouchableOpacity,
+    View
+} from 'react-native';
 import {Device} from 'ui/device.ui';
 import {Shadow2} from "ui/shadow.ui";
 import {FontSizes, HS, MHS, VS} from 'ui/sizes.ui';
@@ -23,6 +32,11 @@ import {EnumAnalyticEvent} from "constants/anlytics.constant";
 import {languages} from "../../languages";
 import Clipboard from "@react-native-community/clipboard";
 import {setFalseModalRate} from "store/reducer/control.reducer.store";
+import {NAVIGATION_PREMIUM_SERVICE_SCREEN} from "constants/router.constant";
+import navigationHelper from "helpers/navigation.helper";
+import {textToSpeech} from "../../services/textToSpeech.service";
+import {sort} from "helpers/object.helper";
+import Sound from "react-native-sound";
 
 const DEFAULT_IMAGE = require('assets/images/book-default.png')
 
@@ -31,19 +45,17 @@ const SummaryScreen = () => {
     const {styles, theme} = useSystem(createStyles);
 
     const dispatch = useAppDispatch();
-    const typingComponentRef = useRef<any>(null)
+    const refTypingText = useRef<any>()
     const textAnswer = useRef<string>("")
     const navigation: any = useNavigation();
     const {
         freeSummaryCount,
-        genderVoice,
     } = useAppSelector(state => state.system)
     const showModalRate = useAppSelector(state => state.control.showModalRate)
-    const refTypingText = useRef<any>();
     const {
         displayAlertAds,
         chatgpt_key,
-        native_ads_pre
+        key_google_cloud
     } = useDisplayAds()
     const eventNameId = useRef(uuidv4())
     const route = useRoute<RouteProp<{ item: { book: TypedBookSummary, summary: boolean } }>>()
@@ -53,6 +65,29 @@ const SummaryScreen = () => {
     const [showFullText, setShowFullText] = useState<boolean>(false);
     const [needShowBtn] = useState<boolean>((book.volumeInfo?.description || "").length > 120);
     const speedSSEMessage = useAppSelector(state => state.system.speedSSEMessage)
+    const useNormalSummary = useAppSelector(state => state.system.useNormalSummary)
+    const [isUseNormalSummary, setIsUseNormalSummary] = useState<boolean>(summary ? book.isNormalSummary : useNormalSummary)
+    const isPremium = useAppSelector(state => state.system.isPremium)
+    const refIsPremium = useRef(isPremium)
+    const refIsUseNormalSummary = useRef(isUseNormalSummary)
+    const refTextSentenceList = useRef<string[]>([])
+    const refTextSentenceListToStorage = useRef<string[]>([])
+    const textSentence = useRef<string>("")
+    const refVoiceReading = useRef<{ name: string, path: string }[]>([]);
+    const refIsReading = useRef<boolean>(false);
+    const refCurrentSound = useRef<Sound | undefined>();
+    const [isSpeeching, setIsSpeeching] = useState(false)
+    const [isLoadingSpeech, setIsLoadingSpeech] = useState(false)
+    const [showSpeechButton, setShowSpeechButton] = useState(false)
+    const refAllowSpeech = useRef<boolean>(false)
+
+    useEffect(() => {
+        refIsPremium.current = isPremium
+    }, [isPremium])
+
+    useEffect(() => {
+        refIsUseNormalSummary.current = isUseNormalSummary
+    }, [isUseNormalSummary])
 
     useEffect(
         () =>
@@ -69,7 +104,10 @@ const SummaryScreen = () => {
                     message: languages.settingScreen.leaveScreenBook,
                     actions: [{
                         text: languages.settingScreen.leaveScreen,
-                        onPress: () => navigation.dispatch(e.data.action)
+                        onPress: () => {
+                            DeviceEventEmitter.removeAllListeners(eventNameId.current);
+                            navigation.dispatch(e.data.action)
+                        }
                     }, {
                         text: languages.stay,
                     }]
@@ -89,6 +127,7 @@ const SummaryScreen = () => {
     }, [theme, freeSummaryCount])
 
     const onShare = useCallback(async () => {
+        GlobalPopupHelper.admobGlobalRef.current?.setIgnoreOneTimeAppOpenAd()
         try {
             await Share.share({
                 message:
@@ -114,23 +153,119 @@ const SummaryScreen = () => {
         })
     }, [theme, freeSummaryCount])
 
+    const generateSummary = useCallback((isUseNormal: boolean) => {
+        let prompt;
+        if (isUseNormal) {
+            prompt = languages.homeScreen.promptSummarySort.replace(":book", book.volumeInfo?.title || "") + (book.volumeInfo?.authors?.[0] ? languages.homeScreen.promptSummaryAuthor.replace(":author", book.volumeInfo?.authors?.[0]) : "")
+        } else {
+            prompt = languages.homeScreen.promptSummaryDetail.replace(":book", book.volumeInfo?.title || "") + (book.volumeInfo?.authors?.[0] ? languages.homeScreen.promptSummaryAuthor.replace(":author", book.volumeInfo?.authors?.[0]) : "") + languages.homeScreen.promptSummaryDetailTail
+        }
+        console.log(prompt)
+        const messageSendToChatGPT = [{
+            role: "user",
+            content: prompt
+        }]
+
+        functionSendMessage({
+            chatgpt_key,
+            messageSendToChatGPT,
+            handleData,
+            handleDataGPT,
+            eventName: eventNameId.current
+        })
+    }, [])
+
     useEffect(() => {
         if (!summary) {
-            dispatch(setFreeSummaryCount(-1))
-            typingComponentRef.current?.setTyping(true)
+            if (!refIsPremium.current) {
+                dispatch(setFreeSummaryCount(-1))
+            }
 
-            const messageSendToChatGPT = [{
-                role: "user",
-                content: "Tóm tắt cho tôi nội dung cuốn sách " + book.volumeInfo?.title + (book.volumeInfo?.authors?.[0]?" của tác giả " + book.volumeInfo?.authors?.[0]:"")
-            }]
-
-            functionSendMessage({
-                chatgpt_key,
-                messageSendToChatGPT,
-                handleData,
-                handleDataGPT,
-                eventName: eventNameId.current
+            generateSummary(isUseNormalSummary)
+        } else {
+            refTypingText.current?.setFullText(book?.summaryContent);
+            [...book.summaryContent].forEach(word => {
+                textSentence.current += word;
+                if (([". ", "! ", "? "].includes(textSentence.current.slice(-2)) || textSentence.current.endsWith("\n")) && textSentence.current.length >= 100) {
+                    if (refTextSentenceList.current.length === 0) {
+                        setShowSpeechButton(true);
+                    }
+                    refTextSentenceList.current?.push(textSentence.current)
+                    refTextSentenceListToStorage.current?.push(textSentence.current)
+                    textSentence.current = "";
+                }
             })
+            if (textSentence.current.length > 0) {
+                refTextSentenceList.current?.push(textSentence.current)
+                refTextSentenceListToStorage.current?.push(textSentence.current)
+                textSentence.current = "";
+            }
+        }
+    }, [])
+
+    const checkToPlayContinueVoice = useCallback(() => {
+        if(refAllowSpeech.current){
+            if (refVoiceReading.current.length > 0) {
+                playContinueVoice()
+            }
+        }
+    }, [])
+
+    const playContinueVoice = useCallback(() => {
+        if(refAllowSpeech.current){
+            refIsReading.current = true;
+            let pathFile: string = refVoiceReading.current?.[0]?.path;
+            refVoiceReading.current.shift();
+            refCurrentSound.current = new Sound(pathFile, "", (error) => {
+                if (error) {
+                    console.log("fail to load sound");
+                    return;
+                }
+                refCurrentSound.current?.play(() => {
+                    refIsReading.current = false;
+                    if (refVoiceReading.current.length === 0) {
+                        setIsSpeeching(false);
+                    }
+                    checkToPlayContinueVoice();
+                })
+            });
+        }
+
+    }, [])
+
+    const startTextToSpeech = useCallback(async () => {
+        if(refAllowSpeech.current){
+            if (refVoiceReading.current.length === 0 && !refIsReading.current) {
+                setIsLoadingSpeech(true);
+            }
+
+            if (refTextSentenceList.current?.length > 0 && refVoiceReading.current.length <= 5) {
+                let text = refTextSentenceList.current.shift()
+                textToSpeech({
+                    text: text || "",
+                    tokenGoogle: key_google_cloud,
+                    language: languages.getInterfaceLanguage(),
+                })
+                    .then((result) => {
+                        if (result.name) {
+                            refVoiceReading.current = [...refVoiceReading.current, result];
+                            refVoiceReading.current.sort(sort("name"))
+                            if (refVoiceReading.current.length > 0 && !refIsReading.current) {
+                                setIsSpeeching(true);
+                                setIsLoadingSpeech(false);
+                                playContinueVoice()
+                            }
+                            startTextToSpeech()
+                        } else {
+                            setIsLoadingSpeech(false);
+                        }
+                    }).catch((error) => {
+                    console.log("error", error);
+
+                    setIsLoadingSpeech(false);
+                    setIsSpeeching(false);
+                })
+            }
         }
     }, [])
 
@@ -140,22 +275,42 @@ const SummaryScreen = () => {
             const objectValue = JSON.parse(value)
             const word = objectValue?.choices?.[0]?.delta?.content || ""
             if (!!word || (word.trim() && !textAnswer.current)) {
-                typingComponentRef.current?.setHasAnswer(true)
                 textAnswer.current += word;
-                typingComponentRef.current?.setText(textAnswer.current);
+                refTypingText.current?.setText(textAnswer.current);
+
+                if (refIsPremium.current) {
+                    textSentence.current += word;
+                    if (([". ", "! ", "? "].includes(textSentence.current.slice(-2)) || textSentence.current.endsWith("\n")) && textSentence.current.length >= 100) {
+                        if (refTextSentenceList.current.length === 0) {
+                            setShowSpeechButton(true);
+                        }
+                        refTextSentenceList.current?.push(textSentence.current)
+                        refTextSentenceListToStorage.current?.push(textSentence.current)
+                        textSentence.current = "";
+                    }
+                }
             }
-            refTypingText.current?.setText(textAnswer.current);
         } catch (error) {
 
         }
-    }, [genderVoice])
+    }, [])
 
     const handleDataGPT = useCallback(async () => {
-        typingComponentRef.current?.setDone()
+        if (textSentence.current.length > 0) {
+            refTextSentenceList.current?.push(textSentence.current)
+            refTextSentenceListToStorage.current?.push(textSentence.current)
+            textSentence.current = "";
+        }
+        refTypingText.current?.setDone()
         book.summaryContent = textAnswer.current;
-        insertBook({...book, dateSummary: new Date().getTime()+"", summaryContent: book.summaryContent})
+        insertBook({
+            ...book,
+            dateSummary: new Date().getTime() + "",
+            summaryContent: book.summaryContent,
+            isNormalSummary: refIsUseNormalSummary.current
+        })
         setCanCopy(true);
-    }, [genderVoice])
+    }, [])
 
     const onSwitchFullDes = useCallback(() => {
         setShowFullText(old => !old);
@@ -170,7 +325,7 @@ const SummaryScreen = () => {
         }
     }
 
-    const onCoppy = () => {
+    const onCopy = () => {
         if (showModalRate) {
             onConfirmCopy();
             dispatch(setFalseModalRate())
@@ -186,6 +341,11 @@ const SummaryScreen = () => {
                 }
             }, 1000)
         } else {
+            if (refIsPremium.current) {
+                onConfirmCopy();
+                return;
+            }
+
             logEventAnalytics(EnumAnalyticEvent.CopyChat)
             displayAlertAds({
                 title: languages.homeScreen.copyChat,
@@ -194,6 +354,49 @@ const SummaryScreen = () => {
             })
         }
     }
+
+    const onReading = () => {
+        if (refIsPremium.current) {
+            startTextToSpeech();
+            return;
+        }
+
+        navigationHelper.replace(NAVIGATION_PREMIUM_SERVICE_SCREEN)
+    }
+
+    const onStopReading = () => {
+        if (refIsPremium.current) {
+            startTextToSpeech();
+            return;
+        }
+
+        navigationHelper.replace(NAVIGATION_PREMIUM_SERVICE_SCREEN)
+    }
+
+    const stopSpeech = useCallback(()=>{
+        refIsReading.current = false;
+        refCurrentSound.current?.release();
+        refVoiceReading.current = [];
+        setIsSpeeching(false);
+        setIsLoadingSpeech(false)
+    },[])
+
+    const switchSummary = useCallback(() => {
+        if (isUseNormalSummary && !isPremium) {
+            navigationHelper.replace(NAVIGATION_PREMIUM_SERVICE_SCREEN)
+            return;
+        }
+
+        stopSpeech();
+        setShowSpeechButton(false);
+        refTextSentenceList.current = [];
+        refTextSentenceListToStorage.current = [];
+        textSentence.current = ""
+        setCanCopy(false)
+        refTypingText.current?.resetText()
+        generateSummary(!isUseNormalSummary)
+        setIsUseNormalSummary(!isUseNormalSummary)
+    }, [isUseNormalSummary, isPremium])
 
     return (
         <ScrollView contentContainerStyle={styles.container} style={{flex: 1, backgroundColor: theme.background}}>
@@ -204,11 +407,11 @@ const SummaryScreen = () => {
                     resizeMode={"contain"}
                 />
                 <View style={{flex: 1, justifyContent: 'center'}}>
-                    <TextBase title={book.volumeInfo?.title} fontSize={FontSizes._20} color={theme.text}/>
+                    <TextBase title={book.volumeInfo?.title} fontSize={FontSizes._18} color={theme.text}/>
 
                     {
                         book.volumeInfo?.authors?.[0] ?
-                            <TextBase title={"Tác giả: " + book.volumeInfo?.authors?.[0]}
+                            <TextBase title={languages.homeScreen.author + book.volumeInfo?.authors?.[0]}
                                       style={{marginTop: MHS._6}}
                                       fontSize={FontSizes._14} color={theme.text} fontWeight={"bold"}
                                       numberOfLines={1}/>
@@ -217,22 +420,25 @@ const SummaryScreen = () => {
                     }
                     {
                         book.volumeInfo?.publishedDate ?
-                            <TextBase title={"Xuất bản: " + book.volumeInfo?.publishedDate}
+                            <TextBase title={languages.homeScreen.publish + book.volumeInfo?.publishedDate}
                                       style={{marginTop: MHS._6}}
                                       fontSize={FontSizes._14} color={theme.text} fontWeight={"bold"}
                                       numberOfLines={1}/>
                             :
                             null
                     }
-
+                    {canCopy && <View style={styles.viewSaved}>
+                        <TextBase title={languages.homeScreen.saved} color={RootColor.MainColor}
+                                  fontSize={FontSizes._12} fontWeight={'bold'}/>
+                    </View>}
                 </View>
             </View>
             {
                 book.volumeInfo?.description ?
                     <View>
-                        <TextBase title={"Mô tả"}
-                                  style={{marginTop: MHS._16}}
-                                  fontSize={FontSizes._18}
+                        <TextBase title={languages.homeScreen.description}
+                                  style={{marginTop: VS._20}}
+                                  fontSize={FontSizes._16}
                                   color={theme.btnActive} fontWeight={"bold"}/>
                         <TextBase title={book.volumeInfo?.description}
                                   style={{marginTop: MHS._6, textAlign: 'justify'}}
@@ -243,7 +449,7 @@ const SummaryScreen = () => {
                                 <TextBase
                                     color={theme.btnActive}
                                     onPress={onSwitchFullDes}
-                                    title={showFullText ? "Hide" : "Show more"}
+                                    title={showFullText ? languages.homeScreen.hide : languages.homeScreen.showMore}
                                     style={styles.txtMore}/>
                                 :
                                 null
@@ -253,23 +459,54 @@ const SummaryScreen = () => {
                     null
             }
 
-            <View style={{flexDirection:'row', marginTop: MHS._16}}>
+            <View style={{
+                flexDirection: 'row',
+                marginTop: VS._24,
+                alignSelf: 'center',
+                alignItems: 'center',
+                marginBottom: MHS._6
+            }}>
                 <TextBase title={languages.homeScreen.summary}
-                          style={{marginBottom: MHS._6, textAlign: 'justify', marginRight:HS._16}}
-                          fontSize={FontSizes._18}
+                          style={{textAlign: 'justify', marginRight: HS._8}}
+                          fontSize={FontSizes._16}
                           color={theme.btnActive} fontWeight={"bold"}/>
-                {canCopy && <Pressable onPress={onCoppy}>
+                <View style={{flex: 1}}>
+                    <TouchableOpacity
+                        onPress={switchSummary}
+                        activeOpacity={0.5}
+                        style={[styles.btnSwitch, {backgroundColor: isUseNormalSummary ? RootColor.PremiumColor : theme.btnActive}]}>
+                        <TextBase
+                            title={isUseNormalSummary ? languages.homeScreen.useDetailSummary : languages.homeScreen.useNormalSummary}
+                            color={theme.textLight}
+                            fontSize={FontSizes._11} fontWeight={'bold'}/>
+                    </TouchableOpacity>
+                </View>
+
+                {
+                    showSpeechButton ?
+                        (isLoadingSpeech ?
+                            <ActivityIndicator size={'small'} color={RootColor.PremiumColor}/>
+                            :
+                            (
+                                isSpeeching ?
+                                    <Pressable onPress={onStopReading} style={{paddingHorizontal: HS._8}}>
+                                        <IconSpeakerMute size={MHS._18} color={RootColor.PremiumColor}/>
+                                    </Pressable>
+                                    :
+                                    <Pressable onPress={onReading} style={{paddingHorizontal: HS._8}}>
+                                        <IconSpeaker size={MHS._18} color={RootColor.PremiumColor}/>
+                                    </Pressable>
+                            ))
+                        :
+                        null
+                }
+
+                {canCopy && <Pressable onPress={onCopy} style={{paddingHorizontal: HS._8}}>
                     <IconCopy size={MHS._18} color={theme.text}/>
                 </Pressable>}
             </View>
 
-            {
-                summary ?
-                    <TextBase title={book.summaryContent}
-                              style={{textAlign: 'justify'}}/>
-                    :
-                    <TypingText ref={refTypingText} speed={speedSSEMessage}/>
-            }
+            <TypingText ref={refTypingText} speed={speedSSEMessage}/>
 
         </ScrollView>
     );
@@ -285,6 +522,22 @@ const createStyles = (theme: SystemTheme) => {
         },
         headerLeft: {
             paddingHorizontal: HS._16
+        },
+        viewSaved: {
+            borderColor: RootColor.MainColor,
+            marginTop: VS._4,
+            borderRadius: MHS._4,
+            paddingHorizontal: MHS._4,
+            borderWidth: MHS._1,
+            paddingVertical: VS._2,
+            alignSelf: 'flex-start'
+        },
+        btnSwitch: {
+            borderRadius: MHS._4,
+            paddingHorizontal: MHS._12,
+            paddingVertical: VS._5,
+            alignSelf: 'flex-start',
+            ...Shadow2
         },
         viewWave: {
             height: MHS._46,

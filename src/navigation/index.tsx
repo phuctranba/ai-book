@@ -12,12 +12,14 @@ import {EnumTheme} from "constants/system.constant";
 import navigationHelper, {navigationRef} from "helpers/navigation.helper";
 import {languages} from "languages";
 import RNBootSplash from "react-native-bootsplash";
-import {getSystem} from "store/reducer/system.reducer.store";
+import {getSystem, setLanguage, setSubscriptionIds} from "store/reducer/system.reducer.store";
 import {Device} from "ui/device.ui";
 import {RootColor} from "ui/theme";
 import DisconnectNetworkScreen from "./disconect.network.screen";
 import MainNavigator from "./main.navigation";
 import remoteConfig from "@react-native-firebase/remote-config";
+import {usePurchase} from "helpers/purchase.helper";
+import {PRODUCTS, SUBSCRIPTIONS} from "helpers/system.helper";
 
 const {CustomModule} = NativeModules
 
@@ -41,11 +43,18 @@ export type RootStackList = {
 };
 
 function AppNavigation() {
-    const language = useAppSelector(state => state.system.language)
     const theme = useAppSelector(state => state.system.theme)
+    const subscriptionIds = useAppSelector(state => state.system.subscriptionIds)
     const dispatch = useAppDispatch()
     const refIsConnectionInternet = useRef<boolean>(true);
     const fontName = useAppSelector(state => state.system.fontName)
+
+    /**
+     * Để đây cho nó Impression
+     */
+    const stateToImpression = useAppSelector(state => state.system.stateToImpression)
+
+    const {initIAP} = usePurchase(false)
 
     useEffect(() => {
         dispatch(getSystem())
@@ -63,10 +72,24 @@ function AppNavigation() {
         });
 
         remoteConfig().setConfigSettings({
-            minimumFetchIntervalMillis: 3600000,
+            minimumFetchIntervalMillis: 600000,
         }).then(()=>{
             dispatch(getSystem())
         });
+
+        if (subscriptionIds.length == 0) {
+            try {
+                const systemLanguage = languages.getInterfaceLanguage()
+
+                dispatch(setLanguage(systemLanguage.toLowerCase().includes("vi") ? "vi" : "en"))
+                dispatch(setSubscriptionIds(SUBSCRIPTIONS))
+                initIAP({subscriptionIds: SUBSCRIPTIONS, productIds: PRODUCTS})
+            } catch (error) {
+                initIAP({subscriptionIds: SUBSCRIPTIONS, productIds: PRODUCTS})
+            }
+        } else {
+            initIAP({subscriptionIds, productIds: PRODUCTS})
+        }
 
         return (() => {
             unsubscribeNetInfo();
@@ -88,10 +111,6 @@ function AppNavigation() {
         setNavBarComponent()
     }, [theme])
 
-
-    useEffect(() => {
-        languages.setLanguage(language);
-    }, [language])
 
     const NativeStack = createStackNavigator<RootStackList>();
 

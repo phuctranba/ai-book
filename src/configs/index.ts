@@ -1,5 +1,4 @@
 import { Platform } from "react-native";
-import { TestIds } from "react-native-admob-native-ads";
 
 export enum ENV {
   PRODUCTION = "production",
@@ -108,8 +107,8 @@ export let APP_URL = {
 
   APP_CHAT_ROOT: INIT_RUNTIME_DOMAIN_CHAT,
   WEBSITE_FRONTEND: WEBSITE_FRONTEND,
-  TERM: "https://aichatpro-chatgpt-assistant-1.gitbook.io/untitled/terms-and-conditions-for-aichatpro-chatgpt-assistant",
-  POLICIES: "https://www.freeprivacypolicy.com/live/edc280a1-a4ae-4c8b-93b0-a1c32ee6710d"
+  TERM: "https://lamthien8x.gitbook.io/terms-of-use/",
+  POLICIES: "https://lamthien8x.gitbook.io/ai-book/"
 }
 
 export function setUrlEnv(isProduction: boolean) {

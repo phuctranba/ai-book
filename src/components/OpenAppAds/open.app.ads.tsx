@@ -6,6 +6,7 @@ import AdmobApp from './admob.app';
 const OpenAppAds = (_, ref) => {
   const { openAdsId, open_ads } = useDisplayAds()
   const isLoadedConfig = useAppSelector(state => state.control.isLoadedConfig)
+  const isPremium = useAppSelector(state => state.system.isPremium)
 
   if (!isLoadedConfig) {
     return null
@@ -16,6 +17,10 @@ const OpenAppAds = (_, ref) => {
   }
 
   if (!open_ads) {
+    return null
+  }
+
+  if(isPremium){
     return null
   }
 

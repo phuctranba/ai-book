@@ -14,6 +14,7 @@ import {setLastChoiceCountry} from "store/reducer/system.reducer.store";
 import {FontSizes, HS, MHS, VS} from "ui/sizes.ui";
 import AdsNativeCountry from "./component/ads.native.country";
 import {GlobalPopupHelper} from "helpers/index";
+import {NAVIGATION_PREMIUM_SERVICE_SCREEN} from "constants/router.constant";
 
 
 const Item = ({item, selected, index}) => {
@@ -64,7 +65,7 @@ function ChooseCountry() {
         return (
             <TouchableOpacity onPress={() => {
                 dispatch(setLastChoiceCountry());
-                navigationHelper.replace("DrawerNavigator")
+                navigationHelper.replace(NAVIGATION_PREMIUM_SERVICE_SCREEN)
             }} style={styles.btnTopup}>
                 <IconCheck size={FontSizes._28} color={theme.textDark}/>
             </TouchableOpacity>

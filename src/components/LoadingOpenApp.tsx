@@ -1,9 +1,9 @@
-import {useAppSelector} from 'configs/store.config';
-import {NAVIGATION_CHOOSE_COUNTRY_SCREEM} from 'constants/router.constant';
+import {useAppDispatch, useAppSelector} from 'configs/store.config';
+import {NAVIGATION_CHOOSE_COUNTRY_SCREEM, NAVIGATION_PREMIUM_SERVICE_SCREEN} from 'constants/router.constant';
 import {GlobalPopupHelper} from 'helpers/index';
-import {useDisplayAds, useSystem} from 'helpers/system.helper';
+import {SUBSCRIPTIONS, useDisplayAds, useSystem} from 'helpers/system.helper';
 import AnimatedLottieView from 'lottie-react-native';
-import React, {forwardRef, useEffect, useImperativeHandle, useState} from 'react';
+import React, {forwardRef, useEffect, useImperativeHandle, useRef, useState} from 'react';
 import {Image, StyleSheet, View} from 'react-native';
 import Modal from "react-native-modal";
 import {Device} from 'ui/device.ui';
@@ -11,6 +11,9 @@ import {FontSizes, MHS, VS} from 'ui/sizes.ui';
 import {RootColor, SystemTheme} from 'ui/theme';
 import TextBase from './TextBase';
 import dayjs from "dayjs";
+import {useIAP} from "react-native-iap";
+import {setIsPremium, setSubscriptionIds, setUseNormalSummary} from "store/reducer/system.reducer.store";
+import navigationHelper from "helpers/navigation.helper";
 
 const LoadingOpenApp = (_, ref) => {
     const {styles} = useSystem(createStyles)
@@ -18,6 +21,12 @@ const LoadingOpenApp = (_, ref) => {
     const isLoadedConfig = useAppSelector(state => state.control.isLoadedConfig)
     const {native_ads_country} = useDisplayAds()
     const [visible, setVisible] = useState(true)
+    const { availablePurchases, getAvailablePurchases } = useIAP();
+    const dispatch =useAppDispatch()
+    const checkPremiumTwoTime = useRef(0)
+    const alreadyNavigate = useRef(false)
+    const subscriptionIds = useAppSelector(state => state.system.subscriptionIds)
+
 
     useImperativeHandle(ref, () => ({
         hide: () => {
@@ -29,23 +38,46 @@ const LoadingOpenApp = (_, ref) => {
     }), [visible])
 
     useEffect(() => {
-        if (isLoadedConfig) {
-            setTimeout(() => {
-                setVisible(false)
-            }, 15000);
-            setTimeout(()=>{
-                navigate()
-            },1000)
+        const getListSubscription = async () => {
+            try {
+                await getAvailablePurchases()
+            } catch (error) {
+                console.log("init error", error)
+            }
         }
+        setTimeout(() => {
+            setVisible(false)
+        }, 15000);
+        getListSubscription()
+    }, [])
 
-    }, [isLoadedConfig])
+    useEffect(() => {
+        if (checkPremiumTwoTime.current < 2) {
+            checkPremiumTwoTime.current += 1
+        }
+        if (checkPremiumTwoTime.current == 2 && !alreadyNavigate.current && isLoadedConfig) {
+            alreadyNavigate.current = true
+            setTimeout(navigate, 2000);
+        }
+    }, [availablePurchases, isLoadedConfig])
+
 
 
     const navigate = () => {
         console.log("navigate =======================");
 
-        if (native_ads_country && (lastChoiceCountry === undefined || dayjs().diff(dayjs(lastChoiceCountry), "minutes") > 4320)) {
-            GlobalPopupHelper.admobGlobalRef.current?.showOpenAds(NAVIGATION_CHOOSE_COUNTRY_SCREEM)
+        const isPremium = !(Array.isArray(availablePurchases) && availablePurchases.find(item => SUBSCRIPTIONS.find(i => i == item?.productId)) ? true : false)
+
+        dispatch(setIsPremium(isPremium))
+        dispatch(setUseNormalSummary(!isPremium))
+        if (isPremium) {
+            setTimeout(() => {
+                setVisible(false)
+            }, 1000);
+        }
+
+        if(isPremium){
+            navigationHelper.replace("DrawerNavigator")
             return;
         }
 
@@ -56,10 +88,19 @@ const LoadingOpenApp = (_, ref) => {
             }
         }, 100)
 
-        console.log("HGoi")
-        GlobalPopupHelper.admobGlobalRef.current?.showOpenAds("DrawerNavigator")
+        if (native_ads_country && (lastChoiceCountry === undefined || dayjs().diff(dayjs(lastChoiceCountry), "minutes") > 4320)) {
+            GlobalPopupHelper.admobGlobalRef.current?.showOpenAds(NAVIGATION_CHOOSE_COUNTRY_SCREEM)
+            return;
+        }
+
+        GlobalPopupHelper.admobGlobalRef.current?.showOpenAds(NAVIGATION_PREMIUM_SERVICE_SCREEN)
     }
 
+    useEffect(() => {
+        if (subscriptionIds.length == 0) {
+            dispatch(setSubscriptionIds(SUBSCRIPTIONS))
+        }
+    }, [])
 
     return (
         <Modal
