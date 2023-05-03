@@ -110,6 +110,7 @@ export const FontSizes = {
   H5: mhs(28, 0.3) - 12,
 
 
+  _1: mhs(1, 0.3),
   _2: mhs(2, 0.3),
   _4: mhs(4, 0.3),
   _5: mhs(5, 0.3),

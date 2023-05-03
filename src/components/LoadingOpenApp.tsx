@@ -66,7 +66,7 @@ const LoadingOpenApp = (_, ref) => {
     const navigate = () => {
         console.log("navigate =======================");
 
-        const isPremium = !(Array.isArray(availablePurchases) && availablePurchases.find(item => SUBSCRIPTIONS.find(i => i == item?.productId)) ? true : false)
+        const isPremium = (Array.isArray(availablePurchases) && availablePurchases.find(item => SUBSCRIPTIONS.find(i => i == item?.productId)) ? true : false)
 
         dispatch(setIsPremium(isPremium))
         dispatch(setUseNormalSummary(!isPremium))

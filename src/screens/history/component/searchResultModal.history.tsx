@@ -1,5 +1,5 @@
-import React, {forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef} from 'react';
-import {FlatList, Keyboard, Pressable, StyleSheet, View} from 'react-native';
+import React, {forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef} from 'react';
+import {FlatList, Image, Keyboard, Pressable, StyleSheet, View} from 'react-native';
 import {useDisplayAds, useSystem} from "helpers/system.helper";
 import {FontSizes, HS, MHS, VS} from "ui/sizes.ui";
 import {SystemTheme} from "ui/theme";
@@ -106,18 +106,28 @@ const SearchResultModal = forwardRef(({isFocusInSearchBar, closeSearch, onBlur}:
         return (
             <Pressable style={styles.viewItem}
                        onPress={() => onPressItem(item)}>
-                <FastImage
-                    source={item.volumeInfo?.imageLinks?.thumbnail ? {uri: item.volumeInfo?.imageLinks?.thumbnail} : DEFAULT_IMAGE}
-                    style={{width: MHS._60, height: MHS._60, alignSelf: "center", marginRight: HS._6}}
-                    resizeMode={"contain"}
-                />
-                <View style={{flex: 1}}>
+                {
+                    item.volumeInfo?.imageLinks?.thumbnail ?
+                        <FastImage
+                            source={{uri: item.volumeInfo?.imageLinks?.thumbnail}}
+                            style={styles.image}
+                            resizeMode={"cover"}
+                        />
+                        :
+                        <FastImage
+                            source={DEFAULT_IMAGE}
+                            style={styles.imageDefault}
+                            resizeMode={"stretch"}
+                        />
+
+                }
+                <View style={styles.textContentView}>
                     <TextBase title={item.volumeInfo?.title} fontSize={FontSizes._14} color={theme.text}
                               numberOfLines={2}/>
                     {
                         item.volumeInfo?.authors?.[0] ?
                             <TextBase title={languages.homeScreen.author + item.volumeInfo?.authors?.[0]}
-                                      style={{marginTop: MHS._6}}
+                                      style={styles.txtAuthor}
                                       fontSize={FontSizes._12} color={theme.text} fontWeight={"bold"}
                                       numberOfLines={1}/>
                             :
@@ -130,13 +140,13 @@ const SearchResultModal = forwardRef(({isFocusInSearchBar, closeSearch, onBlur}:
         )
     }, [theme, freeSummaryCount])
 
-    const ListEmptyComponent = () => {
+    const ListEmptyComponent = useMemo(() => {
         return (
             <View style={[styles.containerEmpty]}>
                 <TextBase title={languages.homeScreen.listBookEmpty} style={{textAlign:'center'}} fontSize={18}/>
             </View>
         )
-    }
+    },[])
 
     const onScroll = useCallback(()=>{
         Keyboard.dismiss();
@@ -171,6 +181,25 @@ const createStyles = (theme: SystemTheme) => {
             top: 0,
             left: 0,
             paddingHorizontal: HS._12,
+        },
+        txtAuthor:{
+            marginTop: MHS._6
+        },
+        image:{
+            width: MHS._60,
+            height: MHS._80,
+            alignSelf: "center",
+            marginRight: HS._6,
+            backgroundColor:theme.textInactive
+        },
+        textContentView:{
+            flex: 1
+        },
+        imageDefault:{
+            width: MHS._60,
+            height: MHS._80,
+            alignSelf: "center",
+            marginRight: HS._6,
         },
         txtDeleteAll: {
             color: theme.text,

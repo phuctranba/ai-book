@@ -8,7 +8,7 @@ import {logEventAnalytics, showToast, useDisplayAds, useSystem} from 'helpers/sy
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
     ActivityIndicator,
-    DeviceEventEmitter,
+    DeviceEventEmitter, Image,
     Pressable,
     ScrollView,
     Share,
@@ -37,6 +37,7 @@ import navigationHelper from "helpers/navigation.helper";
 import {textToSpeech} from "../../services/textToSpeech.service";
 import {sort} from "helpers/object.helper";
 import Sound from "react-native-sound";
+import isEqual from "react-fast-compare";
 
 const DEFAULT_IMAGE = require('assets/images/book-default.png')
 
@@ -79,7 +80,14 @@ const SummaryScreen = () => {
     const [isSpeeching, setIsSpeeching] = useState(false)
     const [isLoadingSpeech, setIsLoadingSpeech] = useState(false)
     const [showSpeechButton, setShowSpeechButton] = useState(false)
+    const [showSwitchButton, setShowSwitchButton] = useState(summary)
+    const refShowSpeechButton = useRef<any>(showSpeechButton)
     const refAllowSpeech = useRef<boolean>(false)
+    const refTimeOutSwitch = useRef<any>()
+
+    useEffect(() => {
+        refShowSpeechButton.current = showSpeechButton
+    }, [showSpeechButton])
 
     useEffect(() => {
         refIsPremium.current = isPremium
@@ -105,7 +113,6 @@ const SummaryScreen = () => {
                     actions: [{
                         text: languages.settingScreen.leaveScreen,
                         onPress: () => {
-                            DeviceEventEmitter.removeAllListeners(eventNameId.current);
                             navigation.dispatch(e.data.action)
                         }
                     }, {
@@ -160,7 +167,7 @@ const SummaryScreen = () => {
         } else {
             prompt = languages.homeScreen.promptSummaryDetail.replace(":book", book.volumeInfo?.title || "") + (book.volumeInfo?.authors?.[0] ? languages.homeScreen.promptSummaryAuthor.replace(":author", book.volumeInfo?.authors?.[0]) : "") + languages.homeScreen.promptSummaryDetailTail
         }
-        console.log(prompt)
+        console.log(prompt, "-----------")
         const messageSendToChatGPT = [{
             role: "user",
             content: prompt
@@ -181,6 +188,9 @@ const SummaryScreen = () => {
                 dispatch(setFreeSummaryCount(-1))
             }
 
+            refTimeOutSwitch.current = setTimeout(()=>{
+                setShowSwitchButton(true)
+            },5000)
             generateSummary(isUseNormalSummary)
         } else {
             refTypingText.current?.setFullText(book?.summaryContent);
@@ -201,10 +211,18 @@ const SummaryScreen = () => {
                 textSentence.current = "";
             }
         }
+
+        return (() => {
+            DeviceEventEmitter.removeAllListeners(eventNameId.current);
+            if(refTimeOutSwitch.current){
+                clearTimeout(refTimeOutSwitch.current)
+            }
+            stopSpeech()
+        })
     }, [])
 
     const checkToPlayContinueVoice = useCallback(() => {
-        if(refAllowSpeech.current){
+        if (refAllowSpeech.current) {
             if (refVoiceReading.current.length > 0) {
                 playContinueVoice()
             }
@@ -212,7 +230,7 @@ const SummaryScreen = () => {
     }, [])
 
     const playContinueVoice = useCallback(() => {
-        if(refAllowSpeech.current){
+        if (refAllowSpeech.current) {
             refIsReading.current = true;
             let pathFile: string = refVoiceReading.current?.[0]?.path;
             refVoiceReading.current.shift();
@@ -234,7 +252,7 @@ const SummaryScreen = () => {
     }, [])
 
     const startTextToSpeech = useCallback(async () => {
-        if(refAllowSpeech.current){
+        if (refAllowSpeech.current) {
             if (refVoiceReading.current.length === 0 && !refIsReading.current) {
                 setIsLoadingSpeech(true);
             }
@@ -247,18 +265,21 @@ const SummaryScreen = () => {
                     language: languages.getInterfaceLanguage(),
                 })
                     .then((result) => {
-                        if (result.name) {
-                            refVoiceReading.current = [...refVoiceReading.current, result];
-                            refVoiceReading.current.sort(sort("name"))
-                            if (refVoiceReading.current.length > 0 && !refIsReading.current) {
-                                setIsSpeeching(true);
+                        if (refAllowSpeech.current) {
+                            if (result.name) {
+                                refVoiceReading.current = [...refVoiceReading.current, result];
+                                refVoiceReading.current.sort(sort("name"))
+                                if (refVoiceReading.current.length > 0 && !refIsReading.current) {
+                                    setIsSpeeching(true);
+                                    setIsLoadingSpeech(false);
+                                    playContinueVoice()
+                                }
+                                startTextToSpeech()
+                            } else {
                                 setIsLoadingSpeech(false);
-                                playContinueVoice()
                             }
-                            startTextToSpeech()
-                        } else {
-                            setIsLoadingSpeech(false);
                         }
+
                     }).catch((error) => {
                     console.log("error", error);
 
@@ -281,7 +302,7 @@ const SummaryScreen = () => {
                 if (refIsPremium.current) {
                     textSentence.current += word;
                     if (([". ", "! ", "? "].includes(textSentence.current.slice(-2)) || textSentence.current.endsWith("\n")) && textSentence.current.length >= 100) {
-                        if (refTextSentenceList.current.length === 0) {
+                        if (!refShowSpeechButton.current) {
                             setShowSpeechButton(true);
                         }
                         refTextSentenceList.current?.push(textSentence.current)
@@ -301,6 +322,10 @@ const SummaryScreen = () => {
             refTextSentenceListToStorage.current?.push(textSentence.current)
             textSentence.current = "";
         }
+        if (!refShowSpeechButton.current) {
+            setShowSpeechButton(true);
+        }
+
         refTypingText.current?.setDone()
         book.summaryContent = textAnswer.current;
         insertBook({
@@ -355,38 +380,38 @@ const SummaryScreen = () => {
         }
     }
 
-    const onReading = () => {
+    const onReading = useCallback(() => {
         if (refIsPremium.current) {
+            refAllowSpeech.current = true;
+            if (!isEqual(refTextSentenceList.current?.[0], refTextSentenceListToStorage.current?.[0])) {
+                refTextSentenceList.current = [...refTextSentenceListToStorage.current]
+            }
             startTextToSpeech();
             return;
         }
 
         navigationHelper.replace(NAVIGATION_PREMIUM_SERVICE_SCREEN)
-    }
+    }, [])
 
-    const onStopReading = () => {
-        if (refIsPremium.current) {
-            startTextToSpeech();
-            return;
-        }
-
-        navigationHelper.replace(NAVIGATION_PREMIUM_SERVICE_SCREEN)
-    }
-
-    const stopSpeech = useCallback(()=>{
+    const stopSpeech = useCallback(() => {
+        refAllowSpeech.current = false;
+        refAllowSpeech.current = false;
+        refTextSentenceList.current = [];
         refIsReading.current = false;
         refCurrentSound.current?.release();
         refVoiceReading.current = [];
         setIsSpeeching(false);
         setIsLoadingSpeech(false)
-    },[])
+    }, [])
 
     const switchSummary = useCallback(() => {
         if (isUseNormalSummary && !isPremium) {
             navigationHelper.replace(NAVIGATION_PREMIUM_SERVICE_SCREEN)
             return;
         }
+        setShowSwitchButton(false)
 
+        DeviceEventEmitter.removeAllListeners(eventNameId.current);
         stopSpeech();
         setShowSpeechButton(false);
         refTextSentenceList.current = [];
@@ -394,8 +419,13 @@ const SummaryScreen = () => {
         textSentence.current = ""
         setCanCopy(false)
         refTypingText.current?.resetText()
+        eventNameId.current = uuidv4();
         generateSummary(!isUseNormalSummary)
         setIsUseNormalSummary(!isUseNormalSummary)
+
+        refTimeOutSwitch.current = setTimeout(()=>{
+            setShowSwitchButton(true)
+        },5000)
     }, [isUseNormalSummary, isPremium])
 
     return (
@@ -441,7 +471,7 @@ const SummaryScreen = () => {
                                   fontSize={FontSizes._16}
                                   color={theme.btnActive} fontWeight={"bold"}/>
                         <TextBase title={book.volumeInfo?.description}
-                                  style={{marginTop: MHS._6, textAlign: 'justify'}}
+                                  style={styles.txtDes}
                                   numberOfLines={(!showFullText && needShowBtn) ? 2 : undefined}
                                   fontSize={FontSizes._14} color={theme.text}/>
                         {
@@ -471,7 +501,7 @@ const SummaryScreen = () => {
                           fontSize={FontSizes._16}
                           color={theme.btnActive} fontWeight={"bold"}/>
                 <View style={{flex: 1}}>
-                    <TouchableOpacity
+                    {showSwitchButton && <TouchableOpacity
                         onPress={switchSummary}
                         activeOpacity={0.5}
                         style={[styles.btnSwitch, {backgroundColor: isUseNormalSummary ? RootColor.PremiumColor : theme.btnActive}]}>
@@ -479,21 +509,22 @@ const SummaryScreen = () => {
                             title={isUseNormalSummary ? languages.homeScreen.useDetailSummary : languages.homeScreen.useNormalSummary}
                             color={theme.textLight}
                             fontSize={FontSizes._11} fontWeight={'bold'}/>
-                    </TouchableOpacity>
+                    </TouchableOpacity>}
                 </View>
 
                 {
                     showSpeechButton ?
                         (isLoadingSpeech ?
-                            <ActivityIndicator size={'small'} color={RootColor.PremiumColor}/>
+                            <ActivityIndicator size={'small'} color={RootColor.PremiumColor}
+                                               style={{paddingHorizontal: HS._12}}/>
                             :
                             (
                                 isSpeeching ?
-                                    <Pressable onPress={onStopReading} style={{paddingHorizontal: HS._8}}>
+                                    <Pressable onPress={stopSpeech} style={{paddingHorizontal: HS._12}}>
                                         <IconSpeakerMute size={MHS._18} color={RootColor.PremiumColor}/>
                                     </Pressable>
                                     :
-                                    <Pressable onPress={onReading} style={{paddingHorizontal: HS._8}}>
+                                    <Pressable onPress={onReading} style={{paddingHorizontal: HS._12}}>
                                         <IconSpeaker size={MHS._18} color={RootColor.PremiumColor}/>
                                     </Pressable>
                             ))
@@ -501,7 +532,7 @@ const SummaryScreen = () => {
                         null
                 }
 
-                {canCopy && <Pressable onPress={onCopy} style={{paddingHorizontal: HS._8}}>
+                {canCopy && <Pressable onPress={onCopy} style={{paddingHorizontal: HS._12}}>
                     <IconCopy size={MHS._18} color={theme.text}/>
                 </Pressable>}
             </View>
@@ -518,7 +549,12 @@ const createStyles = (theme: SystemTheme) => {
             backgroundColor: theme.background,
             paddingTop: VS._12,
             paddingBottom: VS._24,
-            paddingHorizontal: HS._12
+            paddingHorizontal: HS._12,
+        },
+        txtDes: {
+            marginTop: MHS._6,
+            textAlign: 'justify',
+            lineHeight: FontSizes._20
         },
         headerLeft: {
             paddingHorizontal: HS._16

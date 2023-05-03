@@ -1,5 +1,7 @@
 import TextBase from 'components/TextBase';
 import React, { forwardRef, memo, useImperativeHandle, useRef, useState, useEffect } from 'react';
+import {FontSizes} from "ui/sizes.ui";
+import {StyleSheet} from "react-native";
 
 interface Props {
 	addMessageToList?: () => void
@@ -76,11 +78,17 @@ const TypingText = forwardRef(({ addMessageToList, speed }: Props, ref) => {
 
 	return (
 		<TextBase
-			style={{textAlign:'justify'}}
+			style={styles.txt}
 			title={config.text}
 		/>
 	);
 })
 
+const styles = StyleSheet.create({
+	txt:{
+		textAlign:'justify',
+		lineHeight:FontSizes._20
+	}
+})
 
 export default memo(TypingText);

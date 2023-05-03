@@ -14,14 +14,21 @@ export async function getEcosystem() {
 export type TypedSearchBookService = {
     page: number;
     search: string;
+    limit?: number;
 }
 
-export async function searchBook({page, search}: TypedSearchBookService): Promise<TypedBook[]> {
+function removeDuplicatesBook(books:TypedBook[]) {
+    return books.filter((obj, pos, arr) => {
+        return arr.map(mapObj => ((mapObj?.volumeInfo?.title||"")+mapObj?.volumeInfo?.authors?.[0]).toLowerCase()).indexOf(((obj?.volumeInfo?.title||"")+obj?.volumeInfo?.authors?.[0]).toLowerCase()) === pos
+    })
+}
+
+export async function searchBook({page, search, limit = 20}: TypedSearchBookService): Promise<TypedBook[]> {
     try {
         const EndURL = encodeURI(buildEndUrl({
             q: search,
             startIndex: (page-1) * 20,
-            maxResults: 20,
+            maxResults: limit,
             projection: "lite"
         }));
 
@@ -30,7 +37,7 @@ export async function searchBook({page, search}: TypedSearchBookService): Promis
         }>(`https://www.googleapis.com/books/v1/volumes${EndURL}`);
 
         if (Array.isArray(responseAdvisors.data.items)) {
-            return responseAdvisors.data.items;
+            return removeDuplicatesBook(responseAdvisors.data.items);
         } else {
             return [];
         }
