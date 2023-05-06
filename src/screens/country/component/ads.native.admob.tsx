@@ -15,7 +15,7 @@ import {Device} from 'ui/device.ui';
 import {FontSizes, FontWeights, HS, MHS, VS} from 'ui/sizes.ui';
 import {SystemTheme} from 'ui/theme';
 import {useAppDispatch} from "configs/store.config";
-import {switchAdsId} from "store/reducer/system.reducer.store";
+import {setStateToImpression, switchAdsId} from "store/reducer/system.reducer.store";
 
 interface Props {
     onAdClicked: () => void
@@ -92,6 +92,7 @@ const AdsNativeAdmob = ({onAdClicked, onAdLoadFailedProps}: Props, ref) => {
     const onAdLoaded = useCallback(() => {
         logEventAnalytics(EnumAnalyticEvent.NativeAdsLoaded+"country")
         console.log(EnumAnalyticEvent.NativeAdsLoaded+"country")
+        setTimeout(()=>dispatch(setStateToImpression({})),500)
     }, [])
 
     //////////////

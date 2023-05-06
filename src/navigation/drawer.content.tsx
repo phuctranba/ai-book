@@ -22,6 +22,7 @@ import {FontSizes, HS, MHS, VS} from 'ui/sizes.ui';
 import {RootColor, SystemTheme} from 'ui/theme';
 import InAppReview from "react-native-in-app-review";
 import {STORE_LINK} from "constants/system.constant";
+import {EnumAnalyticEvent} from "constants/anlytics.constant";
 
 const Row = ({title, value}) => {
     const {styles, theme} = useSystem(stylesRow)
@@ -46,15 +47,19 @@ const Row = ({title, value}) => {
         if(isPremium){
             switch (value) {
                 case "font":
+                    logEventAnalytics(EnumAnalyticEvent.SettingFront)
                     navigationHelper.navigate(NAVIGATION_SETTING_FONT)
                     break;
                 case "fontSize":
+                    logEventAnalytics(EnumAnalyticEvent.SettingFrontSize)
                     navigationHelper.navigate(NAVIGATION_SETTING_FONT_SIZE)
                     break;
                 case "changeTheme":
+                    logEventAnalytics(EnumAnalyticEvent.SettingTheme)
                     navigationHelper.navigate(NAVIGATION_SETTINGS_THEME)
                     break;
                 default:
+                    logEventAnalytics(EnumAnalyticEvent.SettingSpeed)
                     navigationHelper.navigate(NAVIGATION_SETTING_SPEED)
                     break;
             }
@@ -120,6 +125,7 @@ const DrawerContent = ({navigation}) => {
     }
 
     const onRate = useCallback(() => {
+        logEventAnalytics(EnumAnalyticEvent.PressRateApp)
         GlobalPopupHelper.admobGlobalRef.current?.setIgnoreOneTimeAppOpenAd();
         if (InAppReview.isAvailable()) {
             InAppReview.RequestInAppReview()
@@ -139,12 +145,14 @@ const DrawerContent = ({navigation}) => {
     }
 
     const onPressDonation = () => {
+        logEventAnalytics(EnumAnalyticEvent.PressDonate)
         GlobalPopupHelper.actionSheetRef.current?.show({
             title: languages.drawerContent.donationForUs,
             options: [
                 {
                     title: "1$",
                     onPress: () => {
+                        logEventAnalytics(EnumAnalyticEvent.PressConfirmDonate)
                         GlobalPopupHelper.admobGlobalRef.current?.setIgnoreOneTimeAppOpenAd();
                         buyProduct(PRODUCTS[0])
                     },
@@ -152,6 +160,7 @@ const DrawerContent = ({navigation}) => {
                 {
                     title: "5$",
                     onPress: () => {
+                        logEventAnalytics(EnumAnalyticEvent.PressConfirmDonate)
                         GlobalPopupHelper.admobGlobalRef.current?.setIgnoreOneTimeAppOpenAd();
                         buyProduct(PRODUCTS[1])
                     },

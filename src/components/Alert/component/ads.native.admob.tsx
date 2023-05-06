@@ -60,7 +60,6 @@ const AdsNativeAdmob = ({onAdClicked, onAddImpression}: Props, ref) => {
     useImperativeHandle(ref, () => ({
         onAdFailedToLoad,
         loadAd: () => {
-            console.log("d")
             setDataAds(undefined)
             if (adAlreadyImpression.current) {
                 adAlreadyImpression.current = false

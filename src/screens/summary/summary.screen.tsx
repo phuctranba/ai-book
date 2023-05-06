@@ -134,6 +134,7 @@ const SummaryScreen = () => {
     }, [theme, freeSummaryCount])
 
     const onShare = useCallback(async () => {
+        logEventAnalytics(EnumAnalyticEvent.PressShare)
         GlobalPopupHelper.admobGlobalRef.current?.setIgnoreOneTimeAppOpenAd()
         try {
             await Share.share({
@@ -351,6 +352,7 @@ const SummaryScreen = () => {
     }
 
     const onCopy = () => {
+        logEventAnalytics(EnumAnalyticEvent.PressCopy)
         if (showModalRate) {
             onConfirmCopy();
             dispatch(setFalseModalRate())
@@ -381,6 +383,7 @@ const SummaryScreen = () => {
     }
 
     const onReading = useCallback(() => {
+        logEventAnalytics(EnumAnalyticEvent.PressReading)
         if (refIsPremium.current) {
             refAllowSpeech.current = true;
             if (!isEqual(refTextSentenceList.current?.[0], refTextSentenceListToStorage.current?.[0])) {
@@ -405,6 +408,7 @@ const SummaryScreen = () => {
     }, [])
 
     const switchSummary = useCallback(() => {
+        logEventAnalytics(EnumAnalyticEvent.PressSwitchSummary)
         if (isUseNormalSummary && !isPremium) {
             navigationHelper.replace(NAVIGATION_PREMIUM_SERVICE_SCREEN)
             return;

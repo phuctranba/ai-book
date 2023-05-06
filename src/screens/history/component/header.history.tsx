@@ -2,7 +2,7 @@ import React, {forwardRef, memo, useCallback, useEffect, useImperativeHandle, us
 import {Keyboard, Pressable, StyleSheet, TextInput, View} from 'react-native';
 import {Device} from "ui/device.ui";
 import {FontSizes, HS, MHS, VS} from "ui/sizes.ui";
-import {useDisplayAds, useSystem} from "helpers/system.helper";
+import {logEventAnalytics, useDisplayAds, useSystem} from "helpers/system.helper";
 import {HIT_SLOP_EXPAND_10, HIT_SLOP_EXPAND_20} from "constants/system.constant";
 import {useNavigation} from "@react-navigation/native";
 import {IconClose, IconLeft, IconMenu} from "assets/svgIcons";
@@ -17,6 +17,7 @@ import {languages} from "../../../languages";
 import {setFreeSummaryCount} from "store/reducer/system.reducer.store";
 import {TypedBook} from "models/book.modal";
 import { v4 as uuidv4 } from "uuid";
+import {EnumAnalyticEvent} from "constants/anlytics.constant";
 
 
 interface HeaderHistoryProps {
@@ -116,6 +117,7 @@ const Header = forwardRef(({
     }, [freeSummaryCount])
 
     const onAddFreeBook = useCallback((item?:TypedBook) => {
+        logEventAnalytics(EnumAnalyticEvent.PressAddFreeBook)
         displayAlertAds({
             title: languages.homeScreen.moreBook,
             message: languages.homeScreen.adsMoreBook.replace(":count", `${free_book}`),
@@ -170,6 +172,7 @@ const Header = forwardRef(({
     }, [])
 
     const onFocusFind = useCallback(() => {
+        logEventAnalytics(EnumAnalyticEvent.PressFindABook)
         refInputSearch.current.focus();
     }, [])
 

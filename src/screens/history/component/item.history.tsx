@@ -16,7 +16,7 @@ import NativeAdView, {
     NativeMediaView,
     TaglineView
 } from 'react-native-admob-native-ads';
-import {setFirstInstall, switchAdsId} from 'store/reducer/system.reducer.store';
+import {setStateToImpression, switchAdsId} from 'store/reducer/system.reducer.store';
 import {FontSizes, FontWeights, HS, MHS, VS} from 'ui/sizes.ui';
 import {SystemTheme} from 'ui/theme';
 import FastImage from "react-native-fast-image";
@@ -31,7 +31,6 @@ const ItemHistory = ({item, index}: { item: TypedBookSummary, index: number }) =
     const nativeAdViewRef = useRef<NativeAdView>(null)
     const [dataAds, setDataAds] = useState<any>()
     const dispatch = useAppDispatch()
-    const collectedImpresstion = useRef(false)
     const refShouldReLoadAds = useRef<boolean>(true)
     const isPremium = useAppSelector(state => state.system.isPremium)
     const refIsPremium = useRef(isPremium)
@@ -62,7 +61,6 @@ const ItemHistory = ({item, index}: { item: TypedBookSummary, index: number }) =
     const onNativeAdLoaded = useCallback((data) => {
         logEventAnalytics(EnumAnalyticEvent.onNativeAdsLoaded + "list")
         console.log(EnumAnalyticEvent.onNativeAdsLoaded + "list")
-        collectedImpresstion.current = false
         setDataAds(data)
     }, [])
 
@@ -74,7 +72,6 @@ const ItemHistory = ({item, index}: { item: TypedBookSummary, index: number }) =
     const onAdImpression = useCallback(() => {
         logEventAnalytics(EnumAnalyticEvent.NativeAdsImpression + "list")
         console.log(EnumAnalyticEvent.NativeAdsImpression + "list")
-        collectedImpresstion.current = true
     }, [])
 
     const onAdOpened = useCallback(() => {
@@ -95,6 +92,7 @@ const ItemHistory = ({item, index}: { item: TypedBookSummary, index: number }) =
     const onAdLoaded = useCallback(() => {
         logEventAnalytics(EnumAnalyticEvent.NativeAdsLoaded + "list")
         console.log(EnumAnalyticEvent.NativeAdsLoaded + "list")
+        setTimeout(()=>dispatch(setStateToImpression({})),500)
     }, [])
 
     //////////////
@@ -193,10 +191,6 @@ const ItemHistory = ({item, index}: { item: TypedBookSummary, index: number }) =
     }
 
     const onConfirmPressItem = () => {
-        // bằng 1 cách nào đó cái dispatch này ăn impression. mịa nhà nó
-        if (!collectedImpresstion.current) {
-            dispatch(setFirstInstall({}))
-        }
         navigationHelper.navigate(NAVIGATION_SUMMARY_SCREEN, {book: item, summary: true})
     }
 

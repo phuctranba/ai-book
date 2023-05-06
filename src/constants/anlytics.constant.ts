@@ -45,9 +45,24 @@ export enum EnumAnalyticEvent {
   OpenAdsImpression = "open_impression",
   OpenAdsShowFail = "open_show_fail",
   OpenAdsLoadFail = "open_load_fail",
+  OpenAdsShow = "open_show",
 
   RewardAdsImpression = "reward_impression",
   RewardAdsShowFail = "reward_show_fail",
   RewardAdsLoadFail = "reward_load_fail",
 
+  SettingFront = "setting_front",
+  SettingFrontSize = "setting_front_size",
+  SettingSpeed = "setting_speed",
+  SettingTheme = "setting_theme",
+
+  PressDonate = "press_donate",
+  PressConfirmDonate = "press_confirm_donate",
+  PressAddFreeBook = "press_add_free_book",
+  PressFindABook = "press_find_a_book",
+  PressShare = "press_share",
+  PressCopy = "press_copy",
+  PressSwitchSummary = "press_switch_summary",
+  PressReading = "press_reading",
+  PressRateApp = "press_rate_app",
 }

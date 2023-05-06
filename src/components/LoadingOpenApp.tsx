@@ -18,15 +18,16 @@ import navigationHelper from "helpers/navigation.helper";
 const LoadingOpenApp = (_, ref) => {
     const {styles} = useSystem(createStyles)
     const lastChoiceCountry = useAppSelector(state => state.system.lastChoiceCountry)
+    const isPremium = useAppSelector(state => state.system.isPremium)
     const isLoadedConfig = useAppSelector(state => state.control.isLoadedConfig)
-    const {native_ads_country} = useDisplayAds()
+    const {native_ads_country, open_ads} = useDisplayAds()
     const [visible, setVisible] = useState(true)
     const { availablePurchases, getAvailablePurchases } = useIAP();
     const dispatch =useAppDispatch()
     const checkPremiumTwoTime = useRef(0)
     const alreadyNavigate = useRef(false)
     const subscriptionIds = useAppSelector(state => state.system.subscriptionIds)
-
+    const refTimeoutToGo = useRef<any>()
 
     useImperativeHandle(ref, () => ({
         hide: () => {
@@ -45,8 +46,8 @@ const LoadingOpenApp = (_, ref) => {
                 console.log("init error", error)
             }
         }
-        setTimeout(() => {
-            setVisible(false)
+        refTimeoutToGo.current = setTimeout(() => {
+            navigate()
         }, 15000);
         getListSubscription()
     }, [])
@@ -55,45 +56,45 @@ const LoadingOpenApp = (_, ref) => {
         if (checkPremiumTwoTime.current < 2) {
             checkPremiumTwoTime.current += 1
         }
+
         if (checkPremiumTwoTime.current == 2 && !alreadyNavigate.current && isLoadedConfig) {
             alreadyNavigate.current = true
-            setTimeout(navigate, 2000);
+            const intervalCheck = setInterval(() => {
+                if (isPremium || GlobalPopupHelper.admobGlobalRef.current?.checkIsOpenLoad || open_ads === false) {
+                    clearInterval(intervalCheck)
+                    if(refTimeoutToGo.current){
+                        clearTimeout(refTimeoutToGo.current)
+                    }
+                    navigate()
+                }
+            }, 100)
         }
-    }, [availablePurchases, isLoadedConfig])
+    }, [availablePurchases, isLoadedConfig, open_ads])
 
 
 
     const navigate = () => {
         console.log("navigate =======================");
 
-        const isPremium = (Array.isArray(availablePurchases) && availablePurchases.find(item => SUBSCRIPTIONS.find(i => i == item?.productId)) ? true : false)
-
-        dispatch(setIsPremium(isPremium))
-        dispatch(setUseNormalSummary(!isPremium))
-        if (isPremium) {
+        const isPremiumCheckFast = (Array.isArray(availablePurchases) && availablePurchases.find(item => SUBSCRIPTIONS.find(i => i == item?.productId)) ? true : false)
+        dispatch(setIsPremium(isPremiumCheckFast))
+        dispatch(setUseNormalSummary(!isPremiumCheckFast))
+        if (isPremiumCheckFast) {
             setTimeout(() => {
                 setVisible(false)
             }, 1000);
         }
 
-        if(isPremium){
+        if(isPremiumCheckFast){
             navigationHelper.replace("DrawerNavigator")
             return;
         }
-
-        const intervalCheck = setInterval(() => {
-            if (GlobalPopupHelper.admobGlobalRef.current?.checkIsOpenLoad) {
-                clearInterval(intervalCheck)
-                setVisible(false)
-            }
-        }, 100)
-
         if (native_ads_country && (lastChoiceCountry === undefined || dayjs().diff(dayjs(lastChoiceCountry), "minutes") > 4320)) {
             GlobalPopupHelper.admobGlobalRef.current?.showOpenAds(NAVIGATION_CHOOSE_COUNTRY_SCREEM)
             return;
         }
-
         GlobalPopupHelper.admobGlobalRef.current?.showOpenAds(NAVIGATION_PREMIUM_SERVICE_SCREEN)
+        setVisible(false)
     }
 
     useEffect(() => {

@@ -58,7 +58,7 @@ export const LIST_IMAGE_ROOM_DEFAULT = ["https://media.whiteg.app/icon-gpt/acorn
 
 
 export const ADS_ID  = Platform.select({
-  android: "ca-app-pub-9764638132493814/1164512433",
+  android: "ca-app-pub-4946499125975524/7415911191",
   ios: "ca-app-pub-9764638132493814/3215960701"
 }) || ""
 
@@ -88,12 +88,12 @@ export const KEY_OPEN_APPLOVIN = Platform.select({
 }) || ""
 
 export const KEY_REWARD_ADS_MOB = Platform.select({
-  android: "ca-app-pub-9764638132493814/3751658075",
+  android: "ca-app-pub-4946499125975524/3662662157",
   ios: "ca-app-pub-9764638132493814/8133756212",
 }) || ""
 
 export const KEY_OPEN_ADS_MOB = Platform.select({
-  android: "ca-app-pub-9764638132493814/1713553601",
+  android: "ca-app-pub-4946499125975524/7410335470",
   ios: "ca-app-pub-9764638132493814/3277669296",
 }) || ""
 

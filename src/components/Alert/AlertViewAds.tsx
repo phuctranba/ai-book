@@ -125,6 +125,8 @@ const AlertViewComponent = forwardRef((props: AlertViewProps, ref: React.Ref<Typ
             setTimeout(() => {
                 setShowButton(true)
             }, 1000)
+
+            setTimeout(()=>dispatch(setStateToImpression({})),500)
         } else {
             refNativeAds.current?.loadAd()
         }
@@ -144,7 +146,6 @@ const AlertViewComponent = forwardRef((props: AlertViewProps, ref: React.Ref<Typ
     }), [alertContent]);
 
     const onDismissModal = useCallback(() => {
-        dispatch(setStateToImpression({}))
         bottomSheetRef.current?.close({duration: 500})
     }, []);
 

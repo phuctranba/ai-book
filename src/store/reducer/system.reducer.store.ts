@@ -3,7 +3,7 @@ import {createAsyncThunk, createSlice, isFulfilled} from "@reduxjs/toolkit";
 import axios from "axios";
 import {ADS_ID, APP_URL, KEY_OPEN_ADS_MOB, KEY_REWARD_ADS_MOB} from "configs/index";
 import {serializeAxiosError} from "configs/reducer.config";
-import {EnumTheme, ID_ECOSYSTEM} from "constants/system.constant";
+import {EnumTheme, ID_APP, ID_ECOSYSTEM} from "constants/system.constant";
 import {cleanEntity} from "helpers/object.helper";
 import {TypedEcosystem} from "models/ecosystem.model";
 import DeviceInfo from "react-native-device-info";
@@ -159,34 +159,34 @@ export const getSystem = createAsyncThunk(
     async (_, thunkApi) => {
         await remoteConfig()
             .setDefaults({
-                [`native_ads_pre_${Platform.OS}`]: true,
-                [`native_ads_after_${Platform.OS}`]: true,
-                [`native_ads_country_${Platform.OS}`]: true,
-                [`native_ads_list_${Platform.OS}`]: true,
-                [`key_native_ads_${Platform.OS}`]: "",
-                [`key_reward_ads_${Platform.OS}`]: "",
-                [`reward_ads_${Platform.OS}`]: true,
-                [`key_open_ads_${Platform.OS}`]: "",
-                [`open_ads_${Platform.OS}`]: true,
+                [`${ID_APP}native_ads_pre_${Platform.OS}`]: true,
+                [`${ID_APP}native_ads_after_${Platform.OS}`]: true,
+                [`${ID_APP}native_ads_country_${Platform.OS}`]: true,
+                [`${ID_APP}native_ads_list_${Platform.OS}`]: true,
+                [`${ID_APP}key_native_ads_${Platform.OS}`]: "",
+                [`${ID_APP}key_reward_ads_${Platform.OS}`]: "",
+                [`${ID_APP}reward_ads_${Platform.OS}`]: true,
+                [`${ID_APP}key_open_ads_${Platform.OS}`]: "",
+                [`${ID_APP}open_ads_${Platform.OS}`]: true,
                 [`chatgpt_key`]: "",
                 [`key_google_cloud`]: "",
-                [`free_book`]: 3,
+                [`${ID_APP}free_book`]: 3,
             })
             .then(() => remoteConfig().fetchAndActivate())
 
 
-        const native_ads_pre = remoteConfig().getValue(`native_ads_pre_${Platform.OS}`);
-        const native_ads_after = remoteConfig().getValue(`native_ads_after_${Platform.OS}`);
-        const native_ads_country = remoteConfig().getValue(`native_ads_country_${Platform.OS}`);
-        const native_ads_list = remoteConfig().getValue(`native_ads_list_${Platform.OS}`);
-        const key_native_ads = remoteConfig().getValue(`key_native_ads_${Platform.OS}`);
-        const key_reward_ads = remoteConfig().getValue(`key_reward_ads_${Platform.OS}`);
-        const reward_ads = remoteConfig().getValue(`reward_ads_${Platform.OS}`);
-        const key_open_ads = remoteConfig().getValue(`key_open_ads_${Platform.OS}`);
-        const open_ads = remoteConfig().getValue(`open_ads_${Platform.OS}`);
+        const native_ads_pre = remoteConfig().getValue(`${ID_APP}native_ads_pre_${Platform.OS}`);
+        const native_ads_after = remoteConfig().getValue(`${ID_APP}native_ads_after_${Platform.OS}`);
+        const native_ads_country = remoteConfig().getValue(`${ID_APP}native_ads_country_${Platform.OS}`);
+        const native_ads_list = remoteConfig().getValue(`${ID_APP}native_ads_list_${Platform.OS}`);
+        const key_native_ads = remoteConfig().getValue(`${ID_APP}key_native_ads_${Platform.OS}`);
+        const key_reward_ads = remoteConfig().getValue(`${ID_APP}key_reward_ads_${Platform.OS}`);
+        const reward_ads = remoteConfig().getValue(`${ID_APP}reward_ads_${Platform.OS}`);
+        const key_open_ads = remoteConfig().getValue(`${ID_APP}key_open_ads_${Platform.OS}`);
+        const open_ads = remoteConfig().getValue(`${ID_APP}open_ads_${Platform.OS}`);
         const chatgpt_key = remoteConfig().getValue(`chatgpt_key`);
         const key_google_cloud = remoteConfig().getValue(`key_google_cloud`);
-        const free_book = remoteConfig().getValue(`free_book`);
+        const free_book = remoteConfig().getValue(`${ID_APP}free_book`);
 
         thunkApi.dispatch(setLoadedConfig())
 

@@ -10,7 +10,7 @@ export const CHATGPT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3M
 export const NUMBER_MESSAGE_BLOCK = 3
 
 export const ID_ECOSYSTEM = "com.iceo.aichat";
-
+export const ID_APP = "ai_book_"
 export const STORE_LINK = Device.isAndroid ? "https://play.google.com/store/apps/details?id=com.zipenter.aibook" : "https://play.google.com/store/apps/details?id=com.zipenter.aibook"
 
 export const FONTS = [

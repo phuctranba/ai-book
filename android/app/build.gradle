@@ -104,8 +104,8 @@ android {
         applicationId "com.zipenter.aibook"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 6
-        versionName "0.0.6"
+        versionCode 7
+        versionName "0.0.7"
         // react-native-iap
         missingDimensionStrategy 'store', 'play'
     }
@@ -166,6 +166,10 @@ android {
             }
 
         }
+    }
+    packagingOptions {
+        jniLibs.useLegacyPackaging = true
+        pickFirst 'lib/*/libc++_shared.so'
     }
 }
 
