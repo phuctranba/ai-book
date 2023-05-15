@@ -28,7 +28,7 @@ const SearchResultModal = forwardRef(({isFocusInSearchBar, closeSearch, onBlur}:
     const {styles, theme} = useSystem(createStyles);
     const refValueSearch = useRef<string>("")
     const freeSummaryCount = useAppSelector(state => state.system.freeSummaryCount)
-    const {displayAlertAds, free_book} = useDisplayAds()
+    const {displayAlertAds, free_credit_of_ads} = useDisplayAds()
     const dispatch = useAppDispatch()
     const isPremium = useAppSelector(state => state.system.isPremium)
     const refIsPremium = useRef(isPremium)
@@ -77,9 +77,9 @@ const SearchResultModal = forwardRef(({isFocusInSearchBar, closeSearch, onBlur}:
     const onAddFreeBook = useCallback((item: TypedBook) => {
         displayAlertAds({
             title: languages.homeScreen.moreBook,
-            message: languages.homeScreen.adsMoreBook.replace(":count", `${free_book}`),
+            message: languages.homeScreen.adsMoreBook.replace(":count", `${free_credit_of_ads}`),
             callback: () => {
-                dispatch(setFreeSummaryCount(free_book))
+                dispatch(setFreeSummaryCount(free_credit_of_ads))
                 navigationHelper.navigate(NAVIGATION_SUMMARY_SCREEN, {book: item})
                 closeSearch()
             }

@@ -80,15 +80,13 @@ const LoadingOpenApp = (_, ref) => {
         dispatch(setIsPremium(isPremiumCheckFast))
         dispatch(setUseNormalSummary(!isPremiumCheckFast))
         if (isPremiumCheckFast) {
+            navigationHelper.replace("DrawerNavigator")
+            return;
             setTimeout(() => {
                 setVisible(false)
             }, 1000);
         }
 
-        if(isPremiumCheckFast){
-            navigationHelper.replace("DrawerNavigator")
-            return;
-        }
         if (native_ads_country && (lastChoiceCountry === undefined || dayjs().diff(dayjs(lastChoiceCountry), "minutes") > 4320)) {
             GlobalPopupHelper.admobGlobalRef.current?.showOpenAds(NAVIGATION_CHOOSE_COUNTRY_SCREEM)
             return;

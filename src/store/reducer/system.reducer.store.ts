@@ -3,7 +3,7 @@ import {createAsyncThunk, createSlice, isFulfilled} from "@reduxjs/toolkit";
 import axios from "axios";
 import {ADS_ID, APP_URL, KEY_OPEN_ADS_MOB, KEY_REWARD_ADS_MOB} from "configs/index";
 import {serializeAxiosError} from "configs/reducer.config";
-import {EnumTheme, ID_APP, ID_ECOSYSTEM} from "constants/system.constant";
+import {EnumTheme, ID_ECOSYSTEM} from "constants/system.constant";
 import {cleanEntity} from "helpers/object.helper";
 import {TypedEcosystem} from "models/ecosystem.model";
 import DeviceInfo from "react-native-device-info";
@@ -51,7 +51,7 @@ interface InitialState {
         key_open_ads: string,
         chatgpt_key: string
         key_google_cloud: string
-        free_book: number
+        free_credit_of_ads: number
     }
     isPremiumTrial: {
         overWord: string
@@ -110,7 +110,7 @@ const initialState: InitialState = {
         key_open_ads: "",
         chatgpt_key: "",
         key_google_cloud: "",
-        free_book: -1
+        free_credit_of_ads: -1
     },
     isPremiumTrial: {
         overWord: "",
@@ -159,50 +159,50 @@ export const getSystem = createAsyncThunk(
     async (_, thunkApi) => {
         await remoteConfig()
             .setDefaults({
-                [`${ID_APP}native_ads_pre_${Platform.OS}`]: true,
-                [`${ID_APP}native_ads_after_${Platform.OS}`]: true,
-                [`${ID_APP}native_ads_country_${Platform.OS}`]: true,
-                [`${ID_APP}native_ads_list_${Platform.OS}`]: true,
-                [`${ID_APP}key_native_ads_${Platform.OS}`]: "",
-                [`${ID_APP}key_reward_ads_${Platform.OS}`]: "",
-                [`${ID_APP}reward_ads_${Platform.OS}`]: true,
-                [`${ID_APP}key_open_ads_${Platform.OS}`]: "",
-                [`${ID_APP}open_ads_${Platform.OS}`]: true,
+                [`native_ads_pre_${Platform.OS}`]: true,
+                [`native_ads_after_${Platform.OS}`]: true,
+                [`native_ads_country_${Platform.OS}`]: true,
+                [`native_ads_list_${Platform.OS}`]: true,
+                [`key_native_ads_${Platform.OS}`]: "",
+                [`key_reward_ads_${Platform.OS}`]: "",
+                [`reward_ads_${Platform.OS}`]: true,
+                [`key_open_ads_${Platform.OS}`]: "",
+                [`open_ads_${Platform.OS}`]: true,
                 [`chatgpt_key`]: "",
                 [`key_google_cloud`]: "",
-                [`${ID_APP}free_book`]: 3,
+                [`free_credit_of_ads`]: 3,
             })
             .then(() => remoteConfig().fetchAndActivate())
 
 
-        const native_ads_pre = remoteConfig().getValue(`${ID_APP}native_ads_pre_${Platform.OS}`);
-        const native_ads_after = remoteConfig().getValue(`${ID_APP}native_ads_after_${Platform.OS}`);
-        const native_ads_country = remoteConfig().getValue(`${ID_APP}native_ads_country_${Platform.OS}`);
-        const native_ads_list = remoteConfig().getValue(`${ID_APP}native_ads_list_${Platform.OS}`);
-        const key_native_ads = remoteConfig().getValue(`${ID_APP}key_native_ads_${Platform.OS}`);
-        const key_reward_ads = remoteConfig().getValue(`${ID_APP}key_reward_ads_${Platform.OS}`);
-        const reward_ads = remoteConfig().getValue(`${ID_APP}reward_ads_${Platform.OS}`);
-        const key_open_ads = remoteConfig().getValue(`${ID_APP}key_open_ads_${Platform.OS}`);
-        const open_ads = remoteConfig().getValue(`${ID_APP}open_ads_${Platform.OS}`);
+        const native_ads_pre = remoteConfig().getValue(`native_ads_pre_${Platform.OS}`);
+        const native_ads_after = remoteConfig().getValue(`native_ads_after_${Platform.OS}`);
+        const native_ads_country = remoteConfig().getValue(`native_ads_country_${Platform.OS}`);
+        const native_ads_list = remoteConfig().getValue(`native_ads_list_${Platform.OS}`);
+        const key_native_ads = remoteConfig().getValue(`key_native_ads_${Platform.OS}`);
+        const key_reward_ads = remoteConfig().getValue(`key_reward_ads_${Platform.OS}`);
+        const reward_ads = remoteConfig().getValue(`reward_ads_${Platform.OS}`);
+        const key_open_ads = remoteConfig().getValue(`key_open_ads_${Platform.OS}`);
+        const open_ads = remoteConfig().getValue(`open_ads_${Platform.OS}`);
         const chatgpt_key = remoteConfig().getValue(`chatgpt_key`);
         const key_google_cloud = remoteConfig().getValue(`key_google_cloud`);
-        const free_book = remoteConfig().getValue(`${ID_APP}free_book`);
+        const free_credit_of_ads = remoteConfig().getValue(`free_credit_of_ads`);
 
         thunkApi.dispatch(setLoadedConfig())
 
         return ({
-            native_ads_pre: native_ads_pre.asBoolean() || true,
-            native_ads_after: native_ads_after.asBoolean() || true,
-            native_ads_country: native_ads_country.asBoolean() || true,
-            reward_ads: reward_ads.asBoolean() || true,
-            open_ads: open_ads.asBoolean() || true,
-            native_ads_list: native_ads_list.asBoolean() || true,
+            native_ads_pre: native_ads_pre.asBoolean(),
+            native_ads_after: native_ads_after.asBoolean(),
+            native_ads_country: native_ads_country.asBoolean(),
+            reward_ads: reward_ads.asBoolean(),
+            open_ads: open_ads.asBoolean(),
+            native_ads_list: native_ads_list.asBoolean(),
             key_native_ads: __DEV__ ? TestNativeIds.Image : (key_native_ads.asString() || ADS_ID),
             key_reward_ads: __DEV__ ? TestIds.REWARDED : (key_reward_ads.asString() || KEY_REWARD_ADS_MOB),
             key_open_ads: __DEV__ ? TestIds.APP_OPEN : (key_open_ads.asString() || KEY_OPEN_ADS_MOB),
             chatgpt_key: chatgpt_key.asString() || "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",
             key_google_cloud: key_google_cloud.asString() || "AIzaSyBWVQcb2lWNVv4K-st0_iSxKBZxN69DOZM",
-            free_book: free_book.asNumber() || 3
+            free_credit_of_ads: Number.isInteger(free_credit_of_ads.asNumber())?free_credit_of_ads.asNumber(): 3
         })
     },
     {serializeError: serializeAxiosError}
@@ -473,9 +473,10 @@ export const System = createSlice({
                 state.tokenFirebase = "";
             })
             .addMatcher(isFulfilled(getSystem), (state, action) => {
+                console.log(action.payload)
                 return {
                     ...state,
-                    freeSummaryCount: state.config.free_book===-1?action.payload.free_book:state.freeSummaryCount,
+                    freeSummaryCount: state.config.free_credit_of_ads===-1?action.payload.free_credit_of_ads:state.freeSummaryCount,
                     config: action.payload,
                     nativeAdsId: action.payload?.key_native_ads?.split("#")?.[0],
                     rewardAdsId: action.payload?.key_reward_ads?.split("#")?.[0],

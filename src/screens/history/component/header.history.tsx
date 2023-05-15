@@ -33,7 +33,7 @@ const Header = forwardRef(({
     const [valueSearch, setValueSearch] = useState<string>("")
     const [isFocus, setIsFocus] = useState<boolean>(false)
     const refInputSearch = useRef<any>()
-    const {displayAlertAds, free_book} = useDisplayAds()
+    const {displayAlertAds, free_credit_of_ads} = useDisplayAds()
     const refValueSearch = useRef<string>("")
     const freeSummaryCount = useAppSelector(state => state.system.freeSummaryCount)
     const dispatch = useAppDispatch()
@@ -120,9 +120,9 @@ const Header = forwardRef(({
         logEventAnalytics(EnumAnalyticEvent.PressAddFreeBook)
         displayAlertAds({
             title: languages.homeScreen.moreBook,
-            message: languages.homeScreen.adsMoreBook.replace(":count", `${free_book}`),
+            message: languages.homeScreen.adsMoreBook.replace(":count", `${free_credit_of_ads}`),
             callback: () => {
-                dispatch(setFreeSummaryCount(free_book))
+                dispatch(setFreeSummaryCount(free_credit_of_ads))
                 if(item){
                     navigationHelper.navigate(NAVIGATION_SUMMARY_SCREEN, {
                         book: item

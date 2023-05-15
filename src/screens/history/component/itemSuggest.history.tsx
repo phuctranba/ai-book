@@ -23,7 +23,7 @@ const ItemSuggestHistory = ({item}: { item: TypedBook }) => {
     const isPremium = useAppSelector(state => state.system.isPremium)
     const refIsPremium = useRef(isPremium)
     const freeSummaryCount = useAppSelector(state => state.system.freeSummaryCount)
-    const {displayAlertAds, free_book} = useDisplayAds()
+    const {displayAlertAds, free_credit_of_ads} = useDisplayAds()
 
     useEffect(() => {
         refIsPremium.current = isPremium
@@ -33,9 +33,9 @@ const ItemSuggestHistory = ({item}: { item: TypedBook }) => {
     const onAddFreeBook = useCallback((item: TypedBook) => {
         displayAlertAds({
             title: languages.homeScreen.moreBook,
-            message: languages.homeScreen.adsMoreBook.replace(":count", `${free_book}`),
+            message: languages.homeScreen.adsMoreBook.replace(":count", `${free_credit_of_ads}`),
             callback: () => {
-                dispatch(setFreeSummaryCount(free_book))
+                dispatch(setFreeSummaryCount(free_credit_of_ads))
                 navigationHelper.navigate(NAVIGATION_SUMMARY_SCREEN, {book: item})
             }
         })

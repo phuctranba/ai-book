@@ -23,7 +23,6 @@ const PremiumServiceScreen = () => {
     const [loading, setLoading] = useState(true)
     const dispatch = useAppDispatch()
     const initTimeout = useRef(true)
-    const {isAuthenticated} = useAppSelector(state => state.user)
     const {subscriptionIds, subscriptionsLocal} = useAppSelector(state => state.system)
     const isFocus = useIsFocused()
     const {initIAP, subscriptions, buySubscription} = usePurchase(isFocus)
@@ -81,7 +80,7 @@ const PremiumServiceScreen = () => {
     const onPressGet = useCallback(() => {
         // GlobalPopupHelper.admobGlobalRef.current?.setIgnoreOneTimeAppOpenAd();
         onConfirmGet()
-    }, [isAuthenticated, subscriptionsLocal])
+    }, [subscriptionsLocal])
 
     const onConfirmGet = useCallback(() => {
         if (subscriptionsLocal?.[0]) {

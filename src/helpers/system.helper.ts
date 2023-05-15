@@ -1,7 +1,7 @@
 import analytics from "@react-native-firebase/analytics";
 import firestore from '@react-native-firebase/firestore';
 import { useAppSelector } from 'configs/store.config';
-import {EnumTheme, ID_APP} from 'constants/system.constant';
+import {EnumTheme} from 'constants/system.constant';
 import { languages } from 'languages';
 import { parsePhoneNumber } from 'libphonenumber-js';
 import { useMemo } from 'react';
@@ -184,7 +184,7 @@ export const logEventAnalytics = async (event: string, dataObj = {}) => {
     if (__DEV__) {
       return;
     }
-    return await analytics().logEvent(`${ID_APP}${DeviceInfo.getBuildNumber()}_${event}`, dataObj);
+    return await analytics().logEvent(`${event}_${DeviceInfo.getBuildNumber()}`, dataObj);
   } catch (error) {
 
     }

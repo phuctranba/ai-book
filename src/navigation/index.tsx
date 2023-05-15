@@ -57,7 +57,6 @@ function AppNavigation() {
     const {initIAP} = usePurchase(false)
 
     useEffect(() => {
-        dispatch(getSystem())
         setNavBarComponent()
 
         const unsubscribeNetInfo = NetInfo.addEventListener(state => {
