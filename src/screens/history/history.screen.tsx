@@ -17,6 +17,7 @@ import {searchBook} from "../../services/book.service";
 import {randomKeyWord} from "helpers/string.helper";
 import ItemSuggestHistory from "screens/history/component/itemSuggest.history";
 import SuggestBookItemSkeleton from "components/skeletonComponents/suggestBook.item.skeleton";
+import {GlobalPopupHelper} from "helpers/index";
 
 const EMPTY = require("assets/lotties/empty.json")
 
@@ -43,6 +44,8 @@ const HistoryScreen = () => {
     }, []))
 
     useEffect(() => {
+        GlobalPopupHelper.modalLoadingRef.current?.hide()
+
         searchBook({page: 1, search: randomKeyWord(), limit: 40})
             .then(setDataSuggestBook)
             .catch(console.log)

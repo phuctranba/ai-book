@@ -210,11 +210,11 @@ const DrawerContent = ({navigation}) => {
                 <Row title={languages.drawerContent.changeTheme} value={"changeTheme"}/>
                 <Row title={languages.drawerContent.speedText} value={"speedText"}/>
 
-                <Pressable style={[styles.row, {marginTop: VS._32}, styles.borderBottom]} onPress={onRate}>
-                    <TextBase title={languages.navigation.rating} fontSize={FontSizes._16} style={styles.textRow}/>
-                    <IconRight size={MHS._14} color={`${theme.text}40`}/>
-                </Pressable>
-                <Pressable style={[styles.row, styles.borderBottom]} onPress={onPressPrivacy}>
+                {/*<Pressable style={[styles.row, {marginTop: VS._32}, styles.borderBottom]} onPress={onRate}>*/}
+                {/*    <TextBase title={languages.navigation.rating} fontSize={FontSizes._16} style={styles.textRow}/>*/}
+                {/*    <IconRight size={MHS._14} color={`${theme.text}40`}/>*/}
+                {/*</Pressable>*/}
+                <Pressable style={[styles.row,{marginTop: VS._32}, styles.borderBottom]} onPress={onPressPrivacy}>
                     <TextBase title={languages.navigation.policy} fontSize={FontSizes._16} style={styles.textRow}/>
                     <IconRight size={MHS._14} color={`${theme.text}40`}/>
                 </Pressable>

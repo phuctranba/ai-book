@@ -27,17 +27,17 @@ const WIDTH = Math.min(Device.width - HS._32, Device.width - 16)
 const AdsNativeAdmob = ({onAdClicked, onAdLoadFailedProps}: Props, ref) => {
     const dispatch = useAppDispatch()
     const {styles, theme} = useSystem(createStyles)
-    const {nativeAdsId, native_ads_country} = useDisplayAds()
+    const {nativeAdsId, native_ads_country, use_native_ads} = useDisplayAds()
     const nativeAdViewRef = useRef<NativeAdView>(null);
     const [dataAds, setDataAds] = useState<any>()
     const refShouldReLoadAds = useRef<boolean>(true)
 
     useEffect(()=>{
-        if(nativeAdsId && refShouldReLoadAds.current && native_ads_country){
+        if(nativeAdsId && refShouldReLoadAds.current && native_ads_country && use_native_ads){
             refShouldReLoadAds.current = false;
             nativeAdViewRef.current?.loadAd();
         }
-    },[nativeAdsId, native_ads_country])
+    },[nativeAdsId, native_ads_country, use_native_ads])
 
     useImperativeHandle(ref, () => ({
         onAdFailedToLoad

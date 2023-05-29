@@ -1,5 +1,9 @@
 import {useAppDispatch, useAppSelector} from "configs/store.config";
-import {NAVIGATION_PREMIUM_SERVICE_SCREEN, NAVIGATION_PREMIUM_SUCCESS_SCREEN} from "constants/router.constant";
+import {
+    NAVIGATION_CHOOSE_COUNTRY_SCREEM,
+    NAVIGATION_PREMIUM_SERVICE_SCREEN,
+    NAVIGATION_PREMIUM_SUCCESS_SCREEN
+} from "constants/router.constant";
 import navigationHelper from "helpers/navigation.helper";
 import {logEventAnalytics, useDisplayAds} from "helpers/system.helper";
 import React, {forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, useState} from "react";
@@ -7,7 +11,7 @@ import {AppState, AppStateStatus, View} from "react-native";
 import mobileAds, {MaxAdContentRating, useAppOpenAd} from "react-native-google-mobile-ads";
 import {switchAdsId} from "store/reducer/system.reducer.store";
 import {EnumAnalyticEvent} from "constants/anlytics.constant";
-import { Device } from "ui/device.ui";
+import {Device} from "ui/device.ui";
 
 export interface TypedRefAdmob {
     setIgnoreOneTimeAppOpenAd: () => void;
@@ -21,7 +25,7 @@ export interface TypedAdmobProps {
 
 export const Admob = forwardRef(({enableAppOpenAd = true}: TypedAdmobProps, ref: React.Ref<TypedRefAdmob>) => {
     const appState = useRef(AppState.currentState);
-    const {open_ads, openAdsId} = useDisplayAds()
+    const {openAdsId} = useDisplayAds()
     const canShowOpenAdmob = useRef<boolean>(true);
     const dispatch = useAppDispatch()
     const isPremium: boolean = useAppSelector((state) => state.system.isPremium);
@@ -32,6 +36,7 @@ export const Admob = forwardRef(({enableAppOpenAd = true}: TypedAdmobProps, ref:
     });
     const showInLoadingApp = useRef(false)
     const refShowingAds = useRef(false)
+    const refAppOpenAd = useRef(false)
 
     //Hàm này siêu cần cho open ads
     useEffect(() => {
@@ -70,23 +75,22 @@ export const Admob = forwardRef(({enableAppOpenAd = true}: TypedAdmobProps, ref:
             showOpenAds,
             checkIsOpenLoad: appOpenAd.isLoaded
         }),
-        [appOpenAd, isPremium, open_ads, isReadyToLoadAdmob]
+        [appOpenAd, isPremium, isReadyToLoadAdmob]
     );
 
     const showOpenAds = (routerName) => {
-        if (!isPremium && open_ads) {
+        if (!isPremium && !appOpenAd.isShowing && !refShowingAds.current && refAppOpenAd.current) {
             showInLoadingApp.current = true
             refRouterName.current = routerName;
-            if (!appOpenAd.isShowing && !refShowingAds.current) {
-                refShowingAds.current = true
-                logEventAnalytics(EnumAnalyticEvent.OpenAdsShow)
-                if (Device.isIos) {
-                    setTimeout(() => {
-                        appOpenAd.show()
-                    }, 1000);
-                } else {
+
+            refShowingAds.current = true
+            logEventAnalytics(EnumAnalyticEvent.OpenAdsShow)
+            if (Device.isIos) {
+                setTimeout(() => {
                     appOpenAd.show()
-                }
+                }, 1000);
+            } else {
+                appOpenAd.show()
             }
         } else {
             navigationHelper.replace(routerName)
@@ -95,16 +99,16 @@ export const Admob = forwardRef(({enableAppOpenAd = true}: TypedAdmobProps, ref:
 
 
     useEffect(() => {
-        if (isReadyToLoadAdmob && !isPremium && open_ads) {
+        if (isReadyToLoadAdmob && !isPremium) {
             if (enableAppOpenAd) {
                 console.log("appOpenAd.load()")
                 appOpenAd.load();
             }
         }
-    }, [appOpenAd.load, isReadyToLoadAdmob, isPremium, open_ads, enableAppOpenAd]);
+    }, [appOpenAd.load, isReadyToLoadAdmob, isPremium, enableAppOpenAd]);
 
     useEffect(() => {
-        if(appOpenAd.isClosed){
+        if (appOpenAd.isClosed) {
             refShowingAds.current = false
         }
 
@@ -118,24 +122,29 @@ export const Admob = forwardRef(({enableAppOpenAd = true}: TypedAdmobProps, ref:
         }
     }, [appOpenAd.isClosed, appOpenAd.isLoaded, enableAppOpenAd]);
 
+    useEffect(() => {
+        refAppOpenAd.current = appOpenAd.isLoaded
+    }, [appOpenAd.isLoaded])
+
     const handleAppStateChange = useCallback((nextAppState: AppStateStatus) => {
         if (appState.current.match(/inactive|background/) && nextAppState === "active" && appOpenAd.isLoaded) {
-            if (open_ads && !isPremium) {
-                if (canShowOpenAdmob.current && navigationHelper.getRouteName() !== NAVIGATION_PREMIUM_SERVICE_SCREEN && navigationHelper.getRouteName() !== NAVIGATION_PREMIUM_SUCCESS_SCREEN) {
-                    setTimeout(()=>{
-                        if (!appOpenAd.isShowing && !showInLoadingApp.current && !refShowingAds.current && appState.current === "active") {
-                            refShowingAds.current = true
-                            logEventAnalytics(EnumAnalyticEvent.OpenAdsShow)
-                            appOpenAd.show();
-                        }
-                    },700)
+            if (!isPremium) {
+                if (canShowOpenAdmob.current) {
+                    if (navigationHelper.getRouteName() !== NAVIGATION_PREMIUM_SERVICE_SCREEN && navigationHelper.getRouteName() !== NAVIGATION_PREMIUM_SUCCESS_SCREEN && navigationHelper.getRouteName() !== NAVIGATION_CHOOSE_COUNTRY_SCREEM) {
+                        setTimeout(() => {
+                            if (!appOpenAd.isShowing && !showInLoadingApp.current && !refShowingAds.current && appState.current === "active" && refAppOpenAd.current) {
+                                refShowingAds.current = true
+                                appOpenAd.show();
+                            }
+                        }, 500)
+                    }
                 } else {
                     canShowOpenAdmob.current = true;
                 }
             }
         }
         appState.current = nextAppState;
-    }, [appOpenAd, isPremium, open_ads]);
+    }, [appOpenAd, isPremium]);
 
 
     useEffect(() => {
@@ -179,7 +188,7 @@ export const Admob = forwardRef(({enableAppOpenAd = true}: TypedAdmobProps, ref:
         return () => {
             subscriptionAppState.remove();
         };
-    }, [appOpenAd.isLoaded, appOpenAd.isShowing, isPremium, open_ads]);
+    }, [appOpenAd.isLoaded, appOpenAd.isShowing, isPremium]);
 
     const setIgnoreOneTimeAppOpenAd = () => {
         canShowOpenAdmob.current = false;

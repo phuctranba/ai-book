@@ -20,7 +20,7 @@ export async function getAllBook(): Promise<TypedBookSummary[]> {
     return new Promise((resolve, reject) => {
         try {
             DB.transaction(async (tx) => {
-                await tx.executeSql(`SELECT * FROM ${TABLE_BOOK} ORDER BY dateSummary`, [], (tx, results) => {
+                await tx.executeSql(`SELECT * FROM ${TABLE_BOOK} ORDER BY dateSummary DESC`, [], (tx, results) => {
                     let books: TypedBookSummary[] = [];
                     for (let i = 0; i < results.rows.length; i++) {
                         try {

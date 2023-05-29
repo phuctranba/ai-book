@@ -170,6 +170,7 @@ function ActionSheetViewComponent(props: ActionSheetViewProps, ref: React.Ref<Ac
       onDismiss={onDismissModal}
       animationIn="slideInUp"
       animationOut="slideOutDown"
+      onBackdropPress
     >
       <View pointerEvents='box-none' style={styles.container}>
         <Animated.View testID={testIDActionSheet} accessibilityLabel={accessibilityLabelActionSheet} pointerEvents='box-none' style={contentStyle}>

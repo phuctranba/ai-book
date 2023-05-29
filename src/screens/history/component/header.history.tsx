@@ -3,7 +3,7 @@ import {Keyboard, Pressable, StyleSheet, TextInput, View} from 'react-native';
 import {Device} from "ui/device.ui";
 import {FontSizes, HS, MHS, VS} from "ui/sizes.ui";
 import {logEventAnalytics, useDisplayAds, useSystem} from "helpers/system.helper";
-import {HIT_SLOP_EXPAND_10, HIT_SLOP_EXPAND_20} from "constants/system.constant";
+import {HIT_SLOP_EXPAND_20} from "constants/system.constant";
 import {useNavigation} from "@react-navigation/native";
 import {IconClose, IconLeft, IconMenu} from "assets/svgIcons";
 import {RootColor, SystemTheme} from "ui/theme";
@@ -16,7 +16,7 @@ import {useAppDispatch, useAppSelector} from "configs/store.config";
 import {languages} from "../../../languages";
 import {setFreeSummaryCount} from "store/reducer/system.reducer.store";
 import {TypedBook} from "models/book.modal";
-import { v4 as uuidv4 } from "uuid";
+import {v4 as uuidv4} from "uuid";
 import {EnumAnalyticEvent} from "constants/anlytics.constant";
 
 
@@ -42,9 +42,9 @@ const Header = forwardRef(({
     const isPremium = useAppSelector(state => state.system.isPremium)
     const refIsPremium = useRef(isPremium)
 
-    useEffect(()=>{
+    useEffect(() => {
         refIsPremium.current = isPremium
-    },[isPremium])
+    }, [isPremium])
 
     useImperativeHandle(
         ref,
@@ -108,7 +108,7 @@ const Header = forwardRef(({
             onBack()
         } else {
             onAddFreeBook({
-                "etag":uuidv4(),
+                "etag": uuidv4(),
                 "volumeInfo": {
                     "title": refValueSearch.current,
                 },
@@ -116,14 +116,14 @@ const Header = forwardRef(({
         }
     }, [freeSummaryCount])
 
-    const onAddFreeBook = useCallback((item?:TypedBook) => {
+    const onAddFreeBook = useCallback((item?: TypedBook) => {
         logEventAnalytics(EnumAnalyticEvent.PressAddFreeBook)
         displayAlertAds({
             title: languages.homeScreen.moreBook,
             message: languages.homeScreen.adsMoreBook.replace(":count", `${free_credit_of_ads}`),
             callback: () => {
                 dispatch(setFreeSummaryCount(free_credit_of_ads))
-                if(item){
+                if (item?.id) {
                     navigationHelper.navigate(NAVIGATION_SUMMARY_SCREEN, {
                         book: item
                     })
@@ -137,23 +137,23 @@ const Header = forwardRef(({
         if (isFocus) {
             return (
                 <Pressable onPress={onPressSubmit} style={styles.btnSummary} hitSlop={HIT_SLOP_EXPAND_20}>
-                    <TextBase title={languages.homeScreen.summary} fontSize={FontSizes._12} color={theme.textLight} fontWeight={"bold"}/>
+                    <TextBase title={"Summary"} fontSize={FontSizes._12} color={theme.textLight} fontWeight={"bold"}/>
                 </Pressable>
             )
-        } else{
-            if(refIsPremium.current){
-                return(
-                        <TextBase title={"PREMIUM\n∞ 📖"} fontSize={FontSizes._10}
-                                  style={{textAlign:'center'}}
-                                  color={RootColor.PremiumColor} fontWeight={"900"}/>
+        } else {
+            if (refIsPremium.current) {
+                return (
+                    <TextBase title={"PREMIUM\n∞ 📖"} fontSize={FontSizes._10}
+                              style={{textAlign: 'center'}}
+                              color={RootColor.PremiumColor} fontWeight={"900"}/>
                 )
-            }else {
-               return(
-                   <Pressable onPress={onAddFreeBook} style={styles.btnPremium} hitSlop={HIT_SLOP_EXPAND_20}>
-                       <TextBase title={freeSummaryCount + " 📖 " + languages.homeScreen.free} fontSize={FontSizes._12}
-                                 color={theme.textLight} fontWeight={"bold"}/>
-                   </Pressable>
-               )
+            } else {
+                return (
+                    <Pressable onPress={onAddFreeBook} style={styles.btnPremium} hitSlop={HIT_SLOP_EXPAND_20}>
+                        <TextBase title={freeSummaryCount + " 📖 " + languages.homeScreen.free} fontSize={FontSizes._12}
+                                  color={theme.textLight} fontWeight={"bold"}/>
+                    </Pressable>
+                )
             }
         }
     }, [isFocus, theme, freeSummaryCount])
@@ -182,7 +182,7 @@ const Header = forwardRef(({
             <View style={styles.viewInput}>
                 <TextInput
                     ref={refInputSearch}
-                    style={[styles.input,{fontFamily:fontName+"-Medium"}]}
+                    style={[styles.input, {fontFamily: fontName + "-Medium"}]}
                     placeholder={languages.homeScreen.searchBook}
                     numberOfLines={1}
                     placeholderTextColor={theme.text}

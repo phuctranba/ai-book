@@ -4,13 +4,10 @@ export enum EnumAnalyticEvent {
   PressWithoutLogin = "user_press_without_login",
   WithoutLoginSuccess = "user_without_login_success",
   ImpressionAdsCountry = "user_impression_ads_country",
-  ImpressionAdsListMessage = "user_impression_ads_list_message",
   PressAdsCountry = "user_press_ads_country",
   ImpressionAdsPrev = "user_impression_ads_prev",
   PressAdsPrev = "user_press_ads_prev",
   ImpressionAdsIn = "user_impression_ads_in",
-  FailNativeAdsCode0 = "user_fail_native_ads_0",
-  FailNativeAdsOtherCode = "user_fail_native_ads_other",
   PressAdsIn = "user_press_ads_in",
   ImpressionAdsAfter = "user_impression_ads_after",
   PressAdsAfter = "user_press_ads_after",
@@ -27,10 +24,8 @@ export enum EnumAnalyticEvent {
   ClearChat = "user_clear_chat",
   CopyChat = "user_copy_chat",
   SendChat = "user_send_chat",
-  FailNativeAdmobAdsCode0 = "user_fail_native_admob",
-  FailNativeApplovinAds = "user_fail_native_applovin_ads",
-  FailedToShowRewardAd = "user_failed_to_show_reward_ad",
-
+  Loading = "user_loading",
+  PressDiscover = "user_press_discover",
 
   NativeAdsImpression = "native_impression_",
   NativeAdsOpened = "native_opened_",
@@ -49,6 +44,8 @@ export enum EnumAnalyticEvent {
 
   RewardAdsImpression = "reward_impression",
   RewardAdsShowFail = "reward_show_fail",
+  RewardAdsCallShow = "reward_call_show",
+  RewardAdsShow = "reward_show",
   RewardAdsLoadFail = "reward_load_fail",
 
   SettingFront = "setting_front",

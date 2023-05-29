@@ -8,7 +8,7 @@ import {logEventAnalytics, showToast, useDisplayAds, useSystem} from 'helpers/sy
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
     ActivityIndicator,
-    DeviceEventEmitter, Image,
+    DeviceEventEmitter,
     Pressable,
     ScrollView,
     Share,
@@ -38,6 +38,8 @@ import {textToSpeech} from "../../services/textToSpeech.service";
 import {sort} from "helpers/object.helper";
 import Sound from "react-native-sound";
 import isEqual from "react-fast-compare";
+import AdsItemList from "components/Ads/ads.itemList";
+import LinearGradient from 'react-native-linear-gradient';
 
 const DEFAULT_IMAGE = require('assets/images/book-default.png')
 
@@ -84,6 +86,7 @@ const SummaryScreen = () => {
     const refShowSpeechButton = useRef<any>(showSpeechButton)
     const refAllowSpeech = useRef<boolean>(false)
     const refTimeOutSwitch = useRef<any>()
+    const {native_ads_list, use_native_ads} = useDisplayAds()
 
     useEffect(() => {
         refShowSpeechButton.current = showSpeechButton
@@ -189,9 +192,9 @@ const SummaryScreen = () => {
                 dispatch(setFreeSummaryCount(-1))
             }
 
-            refTimeOutSwitch.current = setTimeout(()=>{
+            refTimeOutSwitch.current = setTimeout(() => {
                 setShowSwitchButton(true)
-            },5000)
+            }, 5000)
             generateSummary(isUseNormalSummary)
         } else {
             refTypingText.current?.setFullText(book?.summaryContent);
@@ -215,7 +218,7 @@ const SummaryScreen = () => {
 
         return (() => {
             DeviceEventEmitter.removeAllListeners(eventNameId.current);
-            if(refTimeOutSwitch.current){
+            if (refTimeOutSwitch.current) {
                 clearTimeout(refTimeOutSwitch.current)
             }
             stopSpeech()
@@ -427,123 +430,135 @@ const SummaryScreen = () => {
         generateSummary(!isUseNormalSummary)
         setIsUseNormalSummary(!isUseNormalSummary)
 
-        refTimeOutSwitch.current = setTimeout(()=>{
+        refTimeOutSwitch.current = setTimeout(() => {
             setShowSwitchButton(true)
-        },5000)
+        }, 5000)
     }, [isUseNormalSummary, isPremium])
 
+    const renderAds = () => {
+        if (refIsPremium.current || !native_ads_list || !use_native_ads) {
+            return null
+        }
+
+        return <AdsItemList/>
+    }
+
     return (
-        <ScrollView contentContainerStyle={styles.container} style={{flex: 1, backgroundColor: theme.background}}>
-            <View style={{flexDirection: 'row'}}>
-                <FastImage
-                    source={book.volumeInfo?.imageLinks?.thumbnail ? {uri: book.volumeInfo?.imageLinks?.thumbnail} : DEFAULT_IMAGE}
-                    style={{width: MHS._100, height: MHS._100, alignSelf: "center", marginRight: HS._6}}
-                    resizeMode={"contain"}
-                />
-                <View style={{flex: 1, justifyContent: 'center'}}>
-                    <TextBase title={book.volumeInfo?.title} fontSize={FontSizes._18} color={theme.text}/>
+        <View style={{flex: 1}}>
+            <ScrollView contentContainerStyle={styles.container} style={{flex: 1, backgroundColor: theme.background}}>
+                <View style={{flexDirection: 'row'}}>
+                    <FastImage
+                        source={book.volumeInfo?.imageLinks?.thumbnail ? {uri: book.volumeInfo?.imageLinks?.thumbnail} : DEFAULT_IMAGE}
+                        style={{width: MHS._100, height: MHS._100, alignSelf: "center", marginRight: HS._6}}
+                        resizeMode={"contain"}
+                    />
+                    <View style={{flex: 1, justifyContent: 'center'}}>
+                        <TextBase title={book.volumeInfo?.title} fontSize={FontSizes._18} color={theme.text}/>
 
-                    {
-                        book.volumeInfo?.authors?.[0] ?
-                            <TextBase title={languages.homeScreen.author + book.volumeInfo?.authors?.[0]}
-                                      style={{marginTop: MHS._6}}
-                                      fontSize={FontSizes._14} color={theme.text} fontWeight={"bold"}
-                                      numberOfLines={1}/>
-                            :
-                            null
-                    }
-                    {
-                        book.volumeInfo?.publishedDate ?
-                            <TextBase title={languages.homeScreen.publish + book.volumeInfo?.publishedDate}
-                                      style={{marginTop: MHS._6}}
-                                      fontSize={FontSizes._14} color={theme.text} fontWeight={"bold"}
-                                      numberOfLines={1}/>
-                            :
-                            null
-                    }
-                    {canCopy && <View style={styles.viewSaved}>
-                        <TextBase title={languages.homeScreen.saved} color={RootColor.MainColor}
-                                  fontSize={FontSizes._12} fontWeight={'bold'}/>
-                    </View>}
-                </View>
-            </View>
-            {
-                book.volumeInfo?.description ?
-                    <View>
-                        <TextBase title={languages.homeScreen.description}
-                                  style={{marginTop: VS._20}}
-                                  fontSize={FontSizes._16}
-                                  color={theme.btnActive} fontWeight={"bold"}/>
-                        <TextBase title={book.volumeInfo?.description}
-                                  style={styles.txtDes}
-                                  numberOfLines={(!showFullText && needShowBtn) ? 2 : undefined}
-                                  fontSize={FontSizes._14} color={theme.text}/>
-                        {
-                            needShowBtn ?
-                                <TextBase
-                                    color={theme.btnActive}
-                                    onPress={onSwitchFullDes}
-                                    title={showFullText ? languages.homeScreen.hide : languages.homeScreen.showMore}
-                                    style={styles.txtMore}/>
-                                :
-                                null
-                        }
-                    </View>
-                    :
-                    null
-            }
-
-            <View style={{
-                flexDirection: 'row',
-                marginTop: VS._24,
-                alignSelf: 'center',
-                alignItems: 'center',
-                marginBottom: MHS._6
-            }}>
-                <TextBase title={languages.homeScreen.summary}
-                          style={{textAlign: 'justify', marginRight: HS._8}}
-                          fontSize={FontSizes._16}
-                          color={theme.btnActive} fontWeight={"bold"}/>
-                <View style={{flex: 1}}>
-                    {showSwitchButton && <TouchableOpacity
-                        onPress={switchSummary}
-                        activeOpacity={0.5}
-                        style={[styles.btnSwitch, {backgroundColor: isUseNormalSummary ? RootColor.PremiumColor : theme.btnActive}]}>
                         <TextBase
-                            title={isUseNormalSummary ? languages.homeScreen.useDetailSummary : languages.homeScreen.useNormalSummary}
-                            color={theme.textLight}
-                            fontSize={FontSizes._11} fontWeight={'bold'}/>
-                    </TouchableOpacity>}
+                            title={book.volumeInfo?.authors?.[0] ? "Author: " + book.volumeInfo?.authors?.[0] : "Unknow"}
+                            style={{marginTop: MHS._6}}
+                            fontSize={FontSizes._14} color={theme.text} fontWeight={"bold"}
+                            numberOfLines={1}/>
+
+
+                        <TextBase
+                            title={book.volumeInfo?.publishedDate ? "Publish: " + book.volumeInfo?.publishedDate : "Unknow"}
+                            style={{marginTop: MHS._6}}
+                            fontSize={FontSizes._14} color={theme.text} fontWeight={"bold"}
+                            numberOfLines={1}/>
+
+                        {canCopy && <View style={styles.viewSaved}>
+                            <TextBase title={"Saved"} color={RootColor.MainColor}
+                                      fontSize={FontSizes._12} fontWeight={'bold'}/>
+                        </View>}
+                    </View>
                 </View>
+
+                {renderAds()}
 
                 {
-                    showSpeechButton ?
-                        (isLoadingSpeech ?
-                            <ActivityIndicator size={'small'} color={RootColor.PremiumColor}
-                                               style={{paddingHorizontal: HS._12}}/>
-                            :
-                            (
-                                isSpeeching ?
-                                    <Pressable onPress={stopSpeech} style={{paddingHorizontal: HS._12}}>
-                                        <IconSpeakerMute size={MHS._18} color={RootColor.PremiumColor}/>
-                                    </Pressable>
+                    book.volumeInfo?.description ?
+                        <View>
+                            <TextBase title={"Description"}
+                                      style={{marginTop: VS._20}}
+                                      fontSize={FontSizes._16}
+                                      color={theme.btnActive} fontWeight={"bold"}/>
+                            <TextBase title={book.volumeInfo?.description}
+                                      style={styles.txtDes}
+                                      numberOfLines={(!showFullText && needShowBtn) ? 2 : undefined}
+                                      fontSize={FontSizes._14} color={theme.text}/>
+                            {
+                                needShowBtn ?
+                                    <TextBase
+                                        color={theme.btnActive}
+                                        onPress={onSwitchFullDes}
+                                        title={showFullText ? "Hide" : "Show more"}
+                                        style={styles.txtMore}/>
                                     :
-                                    <Pressable onPress={onReading} style={{paddingHorizontal: HS._12}}>
-                                        <IconSpeaker size={MHS._18} color={RootColor.PremiumColor}/>
-                                    </Pressable>
-                            ))
+                                    null
+                            }
+                        </View>
                         :
                         null
                 }
 
-                {canCopy && <Pressable onPress={onCopy} style={{paddingHorizontal: HS._12}}>
-                    <IconCopy size={MHS._18} color={theme.text}/>
-                </Pressable>}
-            </View>
+                <View style={{
+                    flexDirection: 'row',
+                    marginTop: VS._24,
+                    alignSelf: 'center',
+                    alignItems: 'center',
+                    marginBottom: MHS._6
+                }}>
+                    <TextBase title={"Summary"}
+                              style={{textAlign: 'justify', marginRight: HS._8, flex: 1}}
+                              fontSize={FontSizes._16}
+                              color={theme.btnActive} fontWeight={"bold"}/>
 
-            <TypingText ref={refTypingText} speed={speedSSEMessage}/>
+                    {
+                        showSpeechButton ?
+                            (isLoadingSpeech ?
+                                <ActivityIndicator size={'small'} color={RootColor.PremiumColor}
+                                                   style={{paddingHorizontal: HS._12}}/>
+                                :
+                                (
+                                    isSpeeching ?
+                                        <Pressable onPress={stopSpeech} style={{paddingHorizontal: HS._12}}>
+                                            <IconSpeakerMute size={MHS._18} color={RootColor.PremiumColor}/>
+                                        </Pressable>
+                                        :
+                                        <Pressable onPress={onReading} style={{paddingHorizontal: HS._12}}>
+                                            <IconSpeaker size={MHS._18} color={RootColor.PremiumColor}/>
+                                        </Pressable>
+                                ))
+                            :
+                            null
+                    }
 
-        </ScrollView>
+                    {canCopy && <Pressable onPress={onCopy} style={{paddingHorizontal: HS._12}}>
+                        <IconCopy size={MHS._18} color={theme.text}/>
+                    </Pressable>}
+                </View>
+
+                <TypingText ref={refTypingText} speed={speedSSEMessage}/>
+            </ScrollView>
+
+
+            {showSwitchButton &&
+                <LinearGradient locations={[0,0.3]} colors={['#00000000', theme.background]} style={styles.linearGradient}>
+                    <TouchableOpacity
+                        onPress={switchSummary}
+                        activeOpacity={0.5}
+                        style={[styles.btnSwitch, {backgroundColor: isUseNormalSummary ? RootColor.PremiumColor : theme.btnActive}]}>
+                        <TextBase
+                            title={isUseNormalSummary ? "Use detailed summary" : "Use short summary"}
+                            color={theme.textLight}
+                            fontSize={FontSizes._16} fontWeight={'bold'}/>
+                    </TouchableOpacity>
+                </LinearGradient>
+
+            }
+        </View>
     );
 }
 
@@ -552,7 +567,7 @@ const createStyles = (theme: SystemTheme) => {
         container: {
             backgroundColor: theme.background,
             paddingTop: VS._12,
-            paddingBottom: VS._24,
+            paddingBottom: VS._100,
             paddingHorizontal: HS._12,
         },
         txtDes: {
@@ -572,11 +587,17 @@ const createStyles = (theme: SystemTheme) => {
             paddingVertical: VS._2,
             alignSelf: 'flex-start'
         },
+        linearGradient:{
+            width:'100%',
+            position: 'absolute',
+            paddingVertical:VS._20,
+            bottom: 0,
+        },
         btnSwitch: {
-            borderRadius: MHS._4,
-            paddingHorizontal: MHS._12,
-            paddingVertical: VS._5,
-            alignSelf: 'flex-start',
+            borderRadius: MHS._8,
+            paddingHorizontal: HS._24,
+            paddingVertical: VS._12,
+            alignSelf: 'center',
             ...Shadow2
         },
         viewWave: {

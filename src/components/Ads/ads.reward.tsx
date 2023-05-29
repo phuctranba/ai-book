@@ -1,14 +1,20 @@
-import {useAppSelector} from 'configs/store.config';
-import {useDisplayAds} from 'helpers/system.helper';
-import React, {forwardRef, useImperativeHandle, useRef} from 'react';
+import React, {
+    forwardRef,
+    useImperativeHandle,
+    useRef,
+} from 'react';
+
+import { useAppSelector } from 'configs/store.config';
+
 import AdsRewardAdmob from './reward/ads.reward.admob';
+import { useDisplayAds } from 'helpers/system.helper';
 
 export interface TypedAdsRef {
-    showAds: (cb: Function) => void
+    showAds: (cb: Function, notGoPremium: boolean) => void
 }
 
 const AdsRewardComponent = (_, ref: React.Ref<TypedAdsRef>) => {
-    const {reward_ads, rewardAdsId} = useDisplayAds()
+    const {use_reward_ads, rewardAdsId} = useDisplayAds()
     const rewardRef = useRef<any>()
     const isLoadedConfig = useAppSelector(state => state.control.isLoadedConfig)
     const isPremium = useAppSelector(state => state.system.isPremium)
@@ -28,7 +34,7 @@ const AdsRewardComponent = (_, ref: React.Ref<TypedAdsRef>) => {
         return null
     }
 
-    if (!reward_ads) {
+    if (!use_reward_ads) {
         return null
     }
 

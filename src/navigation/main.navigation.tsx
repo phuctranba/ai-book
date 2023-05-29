@@ -15,7 +15,7 @@ import {
     NAVIGATION_SETTING_FONT_SIZE,
     NAVIGATION_SETTING_SPEED,
     NAVIGATION_SETTING_FONT,
-    NAVIGATION_SETTINGS_THEME, NAVIGATION_PREMIUM_SERVICE_SCREEN, NAVIGATION_PREMIUM_SUCCESS_SCREEN
+    NAVIGATION_SETTINGS_THEME, NAVIGATION_PREMIUM_SERVICE_SCREEN, NAVIGATION_PREMIUM_SUCCESS_SCREEN, NAVIGATION_WELCOME
 } from 'constants/router.constant';
 import {useDisplayAds, useSystem} from 'helpers/system.helper';
 import {languages} from 'languages';
@@ -41,6 +41,7 @@ import SettingsThemeScreen from "screens/settingTheme/settingsTheme.screen";
 import PremiumServiceScreen from "screens/premium/premium.service.screen";
 import PremiumSuccessScreen from "screens/premiumSuccess/premiumSuccess.screen";
 import navigationHelper from "helpers/navigation.helper";
+import WelcomeScreen from "screens/welcome/welcome.screen";
 
 
 const Drawer = createDrawerNavigator();
@@ -169,6 +170,13 @@ const MainNavigator = () => {
                 component={ChooseCountry}
                 options={{
                     headerTitle: "Choose Country"
+                }}
+            />
+            <MainStack.Screen
+                name={NAVIGATION_WELCOME}
+                component={WelcomeScreen}
+                options={{
+                    headerShown: false
                 }}
             />
             <MainStack.Screen

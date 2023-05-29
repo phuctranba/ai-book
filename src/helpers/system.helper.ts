@@ -25,7 +25,6 @@ export const SUBSCRIPTIONS = Platform.select({
     android: ["com.zipenter.aibook.subscription.month"],
     ios: ["com.zipenter.aibook.subscription.1month"]
 }) || []
-export const SUBSCRIPTIONS_VN = ["com.iceo.aichat.subscription.vn.month"]
 
 export const PRODUCTS = ["com.zipenter.aibook.donate.1usd", "com.zipenter.aibook.donate.5usd"]
 
@@ -144,37 +143,36 @@ export const useDisplayAds = () => {
     const rewardAdsId = useAppSelector(state => state.system.rewardAdsId)
     const openAdsId = useAppSelector(state => state.system.openAdsId)
 
-  const { native_ads_pre, native_ads_after, reward_ads } =  config
+  const { native_ads_pre, native_ads_after, use_reward_ads, use_native_ads } =  config
 
-  const displayAlertAds = ({ title, message, callback }: { title: string, message: string, callback?: Function }) => {
-    const alertPre = native_ads_pre ? GlobalPopupHelper.alertAdsRef.current : GlobalPopupHelper.alertRef.current
-    const alertAfter = native_ads_after ? GlobalPopupHelper.alertAdsRef.current : GlobalPopupHelper.alertRef.current
+    const displayAlertAds = ({ title, message, callback, notGoPremium = false, useReward = true }: { title: string, message: string, callback?: Function, notGoPremium?: boolean, useReward?: boolean }) => {
+        const alertPre = native_ads_pre && use_native_ads ? GlobalPopupHelper.alertAdsRef.current : GlobalPopupHelper.alertRef.current
+        const alertAfter = native_ads_after && use_native_ads ? GlobalPopupHelper.alertAdsRef.current : GlobalPopupHelper.alertRef.current
 
-    alertPre?.alert({
-      title,
-      message,
-      actions: [{
-        text: languages.confirm,
-        active: true,
-        onPress: () => {
-          if (reward_ads) {
-            GlobalPopupHelper.adsRewardRef.current?.showAds(() => {
-              setTimeout(() => {
-                  console.log(languages.unlockPremiumFeature,"languages.unlockPremiumFeature")
-                alertAfter?.alert({
-                  title: languages.unlockPremiumFeature,
-                  message: languages.successfulAward,
-                  onClose: () => { callback?.() }
-                })
-              }, 500);
-            })
-          } else {
-            callback?.()
-          }
-        }
-      }]
-    })
-  }
+        alertPre?.alert({
+            title,
+            message,
+            actions: [{
+                text: languages.confirm,
+                active: true,
+                onPress: () => {
+                    if (use_reward_ads && useReward) {
+                        GlobalPopupHelper.adsRewardRef.current?.showAds(() => {
+                            setTimeout(() => {
+                                alertAfter?.alert({
+                                    title: languages.unlockPremiumFeature,
+                                    message: languages.successfulAward,
+                                    onClose: () => { callback?.() }
+                                })
+                            }, 500);
+                        }, notGoPremium)
+                    } else {
+                        callback?.()
+                    }
+                }
+            }]
+        })
+    }
 
   return { displayAlertAds, nativeAdsId, rewardAdsId, openAdsId, ...config }
 }

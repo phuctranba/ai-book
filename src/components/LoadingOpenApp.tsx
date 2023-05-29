@@ -1,7 +1,7 @@
 import {useAppDispatch, useAppSelector} from 'configs/store.config';
 import {NAVIGATION_CHOOSE_COUNTRY_SCREEM, NAVIGATION_PREMIUM_SERVICE_SCREEN} from 'constants/router.constant';
 import {GlobalPopupHelper} from 'helpers/index';
-import {SUBSCRIPTIONS, useDisplayAds, useSystem} from 'helpers/system.helper';
+import {logEventAnalytics, SUBSCRIPTIONS, useDisplayAds, useSystem} from 'helpers/system.helper';
 import AnimatedLottieView from 'lottie-react-native';
 import React, {forwardRef, useEffect, useImperativeHandle, useRef, useState} from 'react';
 import {Image, StyleSheet, View} from 'react-native';
@@ -14,13 +14,14 @@ import dayjs from "dayjs";
 import {useIAP} from "react-native-iap";
 import {setIsPremium, setSubscriptionIds, setUseNormalSummary} from "store/reducer/system.reducer.store";
 import navigationHelper from "helpers/navigation.helper";
+import {EnumAnalyticEvent} from "constants/anlytics.constant";
 
 const LoadingOpenApp = (_, ref) => {
     const {styles} = useSystem(createStyles)
     const lastChoiceCountry = useAppSelector(state => state.system.lastChoiceCountry)
     const isPremium = useAppSelector(state => state.system.isPremium)
     const isLoadedConfig = useAppSelector(state => state.control.isLoadedConfig)
-    const {native_ads_country, open_ads} = useDisplayAds()
+    const {native_ads_country, use_open_ads} = useDisplayAds()
     const [visible, setVisible] = useState(true)
     const { availablePurchases, getAvailablePurchases } = useIAP();
     const dispatch =useAppDispatch()
@@ -39,6 +40,7 @@ const LoadingOpenApp = (_, ref) => {
     }), [visible])
 
     useEffect(() => {
+        logEventAnalytics(EnumAnalyticEvent.Loading)
         const getListSubscription = async () => {
             try {
                 await getAvailablePurchases()
@@ -60,7 +62,7 @@ const LoadingOpenApp = (_, ref) => {
         if (checkPremiumTwoTime.current == 2 && !alreadyNavigate.current && isLoadedConfig) {
             alreadyNavigate.current = true
             const intervalCheck = setInterval(() => {
-                if (isPremium || GlobalPopupHelper.admobGlobalRef.current?.checkIsOpenLoad || open_ads === false) {
+                if (isPremium || GlobalPopupHelper.admobGlobalRef.current?.checkIsOpenLoad || use_open_ads === false) {
                     clearInterval(intervalCheck)
                     if(refTimeoutToGo.current){
                         clearTimeout(refTimeoutToGo.current)
@@ -69,7 +71,7 @@ const LoadingOpenApp = (_, ref) => {
                 }
             }, 100)
         }
-    }, [availablePurchases, isLoadedConfig, open_ads])
+    }, [availablePurchases, isLoadedConfig, use_open_ads])
 
 
 

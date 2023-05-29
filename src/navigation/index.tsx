@@ -19,7 +19,8 @@ import DisconnectNetworkScreen from "./disconect.network.screen";
 import MainNavigator from "./main.navigation";
 import remoteConfig from "@react-native-firebase/remote-config";
 import {usePurchase} from "helpers/purchase.helper";
-import {PRODUCTS, SUBSCRIPTIONS} from "helpers/system.helper";
+import {logEventAnalytics, PRODUCTS, SUBSCRIPTIONS} from "helpers/system.helper";
+import {NumOfRoute} from "constants/router.constant";
 
 const {CustomModule} = NativeModules
 
@@ -48,7 +49,8 @@ function AppNavigation() {
     const dispatch = useAppDispatch()
     const refIsConnectionInternet = useRef<boolean>(true);
     const fontName = useAppSelector(state => state.system.fontName)
-
+    const refFlow = useRef<string>("FLOW_");
+    const refFlowCount = useRef<number>(0);
     /**
      * Để đây cho nó Impression
      */
@@ -123,6 +125,13 @@ function AppNavigation() {
                                  const currentRouteName = navigationHelper.getActiveRouteName(state);
 
                                  if (previousRouteName !== currentRouteName && !__DEV__) {
+                                     refFlow.current=refFlow.current+(NumOfRoute[currentRouteName]||"")
+                                     refFlowCount.current++;
+                                     if(refFlowCount.current===5){
+                                         logEventAnalytics(refFlow.current)
+                                     }
+
+
                                      try {
                                          await firebase.analytics().logScreenView({
                                              screen_name: currentRouteName,
