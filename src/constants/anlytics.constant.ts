@@ -53,7 +53,6 @@ export enum EnumAnalyticEvent {
   SettingSpeed = "setting_speed",
   SettingTheme = "setting_theme",
 
-  PressDonate = "press_donate",
   PressConfirmDonate = "press_confirm_donate",
   PressAddFreeBook = "press_add_free_book",
   PressFindABook = "press_find_a_book",
@@ -62,4 +61,8 @@ export enum EnumAnalyticEvent {
   PressSwitchSummary = "press_switch_summary",
   PressReading = "press_reading",
   PressRateApp = "press_rate_app",
+
+  EcosystemRewardAdsClick = "eco_reward_ads_click",
+  EcosystemAdsClick = "eco_ads_click",
+  PressDonate = "press_donate",
 }

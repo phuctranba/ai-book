@@ -40,6 +40,7 @@ const LoadingOpenApp = (_, ref) => {
     }), [visible])
 
     useEffect(() => {
+        GlobalPopupHelper.alertAdsRef.current?.close();
         logEventAnalytics(EnumAnalyticEvent.Loading)
         const getListSubscription = async () => {
             try {
@@ -83,10 +84,10 @@ const LoadingOpenApp = (_, ref) => {
         dispatch(setUseNormalSummary(!isPremiumCheckFast))
         if (isPremiumCheckFast) {
             navigationHelper.replace("DrawerNavigator")
-            return;
             setTimeout(() => {
                 setVisible(false)
             }, 1000);
+            return;
         }
 
         if (native_ads_country && (lastChoiceCountry === undefined || dayjs().diff(dayjs(lastChoiceCountry), "minutes") > 4320)) {

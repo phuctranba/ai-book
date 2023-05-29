@@ -19,6 +19,7 @@ export interface TypedAdsRef {
 
 const VIDEO_ADS = [
   {
+    name:'ai_cook',
     video: require('assets/videos/ai_cooking.mp4'),
     link: Platform.select({
       android: "https://play.google.com/store/apps/details?id=com.zipenter.aicook",
@@ -26,13 +27,26 @@ const VIDEO_ADS = [
     })
   },
   {
+    name:'ai_tax',
     video: require('assets/videos/ai_tax.mp4'),
     link: Platform.select({
       android: "https://play.google.com/store/apps/details?id=com.zipenter.aitax",
       default: "https://play.google.com/store/apps/details?id=com.zipenter.aitax"
     })
   },
+  {
+    name:'ai_insurance',
+    video: require('assets/videos/ai_insurance.mp4'),
+    link: Platform.select({
+      android: "https://play.google.com/store/apps/details?id=com.zipenter.aiinsurance",
+      default: "https://play.google.com/store/apps/details?id=com.zipenter.aiinsurance"
+    })
+  },
 ]
+
+function randomVideo() {
+  return VIDEO_ADS[Math.floor(Math.random() * VIDEO_ADS.length)]
+}
 
 const AdsRewardAdmobComponent = (_, ref: React.Ref<TypedAdsRef>) => {
   const callback = useRef<any>();
@@ -239,7 +253,7 @@ const AdsRewardAdmobComponent = (_, ref: React.Ref<TypedAdsRef>) => {
       console.log("show reward ads", rewardedAds.isLoaded);
       logEventAnalytics(EnumAnalyticEvent.RewardAdsCallShow)
       needShowAds.current = true;
-      refSourceVideo.current = Math.random() < 0.5 ? VIDEO_ADS[0] : VIDEO_ADS[1]
+      refSourceVideo.current = randomVideo();
       setShowExitsBtn(false)
       callLoadAds()
     }
@@ -279,6 +293,7 @@ const AdsRewardAdmobComponent = (_, ref: React.Ref<TypedAdsRef>) => {
 
 
   const onPress = useCallback(() => {
+    logEventAnalytics(EnumAnalyticEvent.EcosystemRewardAdsClick+"_"+refSourceVideo.current.name)
     Linking.openURL(refSourceVideo.current.link)
     BackgroundTimer.runBackgroundTimer(() => {
       setShowVideoLocal(false)

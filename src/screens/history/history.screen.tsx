@@ -18,6 +18,7 @@ import {randomKeyWord} from "helpers/string.helper";
 import ItemSuggestHistory from "screens/history/component/itemSuggest.history";
 import SuggestBookItemSkeleton from "components/skeletonComponents/suggestBook.item.skeleton";
 import {GlobalPopupHelper} from "helpers/index";
+import AdsItemList from "components/Ads/ads.itemList";
 
 const EMPTY = require("assets/lotties/empty.json")
 
@@ -71,6 +72,7 @@ const HistoryScreen = () => {
     const ListEmptyComponent = useMemo(() => {
         return (
             <View style={styles.containerEmpty}>
+                <AdsItemList/>
                 <LottieView source={EMPTY}
                             autoPlay
                             loop
@@ -176,11 +178,13 @@ const createStyles = (theme: SystemTheme) => {
             paddingVertical: HS._10
         },
         emptyLottie: {
-            width: '100%'
+            width: '50%',
+            alignSelf:'center',
         },
         contentContainerStyle: {
             paddingHorizontal: HS._8,
-            marginBottom: VS._6
+            marginBottom: VS._6,
+            width:Device.width
         },
         buttonView: {
             marginBottom: Device.paddingBottom * 1.5,
@@ -208,7 +212,8 @@ const createStyles = (theme: SystemTheme) => {
         },
         containerEmpty: {
             justifyContent: "center",
-            alignItems: 'center',
+            // alignItems: 'center',
+            width:'100%'
         },
         viewInput: {
             flexDirection: 'row',

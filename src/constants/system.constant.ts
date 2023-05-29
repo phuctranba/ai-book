@@ -13,6 +13,58 @@ export const ID_ECOSYSTEM = "com.iceo.aichat";
 export const ID_APP = "ai_book_"
 export const STORE_LINK = Device.isAndroid ? "https://play.google.com/store/apps/details?id=com.zipenter.aibook" : "https://play.google.com/store/apps/details?id=com.zipenter.aibook"
 
+export const DATA_ECOSYSTEM_ADS = [
+    {
+        name:"ai_insurance",
+        link:Platform.select({
+            android: "https://play.google.com/store/apps/details?id=com.zipenter.aiinsurance",
+            default: "https://play.google.com/store/apps/details?id=com.zipenter.aiinsurance"
+        }),
+        logo: require("assets/images/logo_insurance.png"),
+        title:"Insurance Tool - AI Adviser",
+        description:"AI-powered app for personalized guidance, policy management, claims assistance",
+        image:[
+            require("assets/images/insurance1.jpg"),
+            require("assets/images/insurance2.jpg"),
+            require("assets/images/insurance3.jpg")
+        ]
+    },
+    {
+        name:"ai_tax",
+        link:Platform.select({
+            android: "https://play.google.com/store/apps/details?id=com.zipenter.aitax",
+            default: "https://play.google.com/store/apps/details?id=com.zipenter.aitax"
+        }),
+        logo: require("assets/images/logo_tax.png"),
+        title:"AI Tax",
+        description:"Immediately answer all your question about the tax in the most exact way",
+        image:[
+            require("assets/images/tax1.jpg"),
+            require("assets/images/tax2.jpg"),
+            require("assets/images/tax3.jpg")
+        ]
+    },
+    {
+        name:"ai_cook",
+        link:Platform.select({
+            android: "https://play.google.com/store/apps/details?id=com.zipenter.aicook",
+            default: "https://play.google.com/store/apps/details?id=com.zipenter.aicook"
+        }),
+        logo: require("assets/images/logo_cook.png"),
+        title:"AI Chef - Cooking Trainer",
+        description:"Your Personal AI Sous Chef for Delicious Recipes & Culinary Skills",
+        image:[
+            require("assets/images/cook1.jpg"),
+            require("assets/images/cook2.jpg"),
+            require("assets/images/cook3.jpg")
+        ]
+    },
+]
+
+export function randomAppAds(){
+    return DATA_ECOSYSTEM_ADS[Math.floor(Math.random()*DATA_ECOSYSTEM_ADS.length)]
+}
+
 export const FONTS = [
     "Raleway",
     "Montserrat",

@@ -1,13 +1,12 @@
-import {IconClose} from 'assets/svgIcons';
-import {EnumAnalyticEvent} from 'constants/anlytics.constant';
-import {HIT_SLOP_EXPAND_20} from 'constants/system.constant';
-import {mhs, useDisplayAds, useSystem, verticalScale} from 'helpers/system.helper';
+import { IconClose } from 'assets/svgIcons';
+import { EnumAnalyticEvent } from 'constants/anlytics.constant';
+import { HIT_SLOP_EXPAND_20 } from 'constants/system.constant';
+import { logEventAnalytics, mhs, useSystem, verticalScale } from 'helpers/system.helper';
 import AnimatedLottieView from 'lottie-react-native';
-import React, {forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useRef, useState} from 'react';
+import React, { ReactNode, forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import isEqual from 'react-fast-compare';
 
 import {
-    ActivityIndicator,
     BackHandler,
     Pressable,
     StyleSheet,
@@ -17,15 +16,16 @@ import {
     View,
     ViewStyle
 } from 'react-native';
-import {Device} from 'ui/device.ui';
-import {FontWeights, HS, MHS, VS} from 'ui/sizes.ui';
+import { Device } from 'ui/device.ui';
+import { FontWeights, HS, MHS, VS } from 'ui/sizes.ui';
 
 import BottomSheet from "@gorhom/bottom-sheet";
-import {useAppDispatch, useAppSelector} from 'configs/store.config';
-import {setStateToImpression} from 'store/reducer/system.reducer.store';
+import { useAppDispatch } from 'configs/store.config';
+import {setFirstInstall, setStateToImpression} from 'store/reducer/system.reducer.store';
 import TextBase from '../TextBase';
-import {OverlayProps} from '../common/Overlay';
-import AdsNativeAlertView from './ads.native.alert.view';
+import { OverlayProps } from '../common/Overlay';
+import AdsNativeAlertView from './component/ads.native';
+import { GlobalPopupHelper } from 'helpers/index';
 
 type AlertAction = {
     text?: string;
@@ -88,7 +88,7 @@ export interface TypedAlert {
 
 const WIDTH = Math.min(Device.width - HS._32, Device.width - 16)
 
-const AlertViewComponent = forwardRef((props: AlertViewProps, ref: React.Ref<TypedAlert>) => {
+function AlertViewComponent(props: AlertViewProps, ref: React.Ref<TypedAlert>) {
     const {
         width = WIDTH,
         borderRadius = mhs(13, 0.3),
@@ -96,14 +96,24 @@ const AlertViewComponent = forwardRef((props: AlertViewProps, ref: React.Ref<Typ
     } = props;
     const [alertContent, setAlertContent] = useState<any>()
     const _mounted = useRef(false);
-    const {theme} = useSystem();
-    const [showButton, setShowButton] = useState(false);
+    const { theme } = useSystem();
     const refNativeAds = useRef<any>()
     const bottomSheetRef = useRef<BottomSheet>(null);
-    const dispatch = useAppDispatch()
+    const dispatch = useAppDispatch();
+    const [startup, setStartup] = useState(false)
+
+    useEffect(() => {
+        if (startup) {
+            setTimeout(() => {
+                bottomSheetRef.current?.close()
+            }, 1000);
+        }
+    }, [startup])
 
     useEffect(() => {
         _mounted.current = true;
+
+        setStartup(true)
         const backAction = () => {
             return false;
         };
@@ -121,12 +131,10 @@ const AlertViewComponent = forwardRef((props: AlertViewProps, ref: React.Ref<Typ
 
     useEffect(() => {
         if (alertContent) {
-            bottomSheetRef.current?.expand({duration: 500})
+            bottomSheetRef.current?.expand({ duration: 500 })
             setTimeout(() => {
-                setShowButton(true)
-            }, 1000)
-
-            setTimeout(()=>dispatch(setStateToImpression({})),500)
+                dispatch(setStateToImpression({}))
+            }, 500);
         } else {
             refNativeAds.current?.loadAd()
         }
@@ -135,7 +143,7 @@ const AlertViewComponent = forwardRef((props: AlertViewProps, ref: React.Ref<Typ
 
     useImperativeHandle(ref, () => ({
         close: () => {
-            bottomSheetRef.current?.close({duration: 500})
+            bottomSheetRef.current?.close({ duration: 500 })
         },
         alert: (content) => {
             if (!alertContent) {
@@ -146,47 +154,48 @@ const AlertViewComponent = forwardRef((props: AlertViewProps, ref: React.Ref<Typ
     }), [alertContent]);
 
     const onDismissModal = useCallback(() => {
-        bottomSheetRef.current?.close({duration: 500})
+        bottomSheetRef.current?.close({ duration: 500 })
     }, []);
 
     const onDismissModalDone = useCallback(() => {
         setTimeout(() => {
             alertContent?.onClose?.()
-            setShowButton(false)
             setAlertContent(undefined)
         }, 300);
     }, [alertContent?.onClose])
 
+    if (!startup) {
+        return null
+    }
+
     return (
         <BottomSheet
             ref={bottomSheetRef}
-            index={0}
             snapPoints={[1, "100%"]}
             enablePanDownToClose={false}
             enableHandlePanningGesture={false}
             enableContentPanningGesture={false}
-            animateOnMount={false}
             onClose={onDismissModalDone}
+            animateOnMount={false}
             handleComponent={null}
-            style={{flex: 1}}
-            backgroundStyle={{backgroundColor: "rgba(0, 0, 0, 0.3)"}}
+            style={{ flex: 1 }}
+            backgroundStyle={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}
         >
             <View pointerEvents='box-none' style={[styles.container]}>
-                <View style={[styles.viewContent, {width, borderRadius, backgroundColor: theme.background}]}>
+                <View style={[styles.viewContent, { width, borderRadius, backgroundColor: theme.background }]}>
                     {
                         <View style={styles.viewContentMessage}>
-                            <Pressable style={{alignSelf: "flex-start", paddingHorizontal: HS._16}}
+                            <Pressable style={{ alignSelf: "flex-start", paddingHorizontal: HS._16 }}
                                        hitSlop={HIT_SLOP_EXPAND_20} onPress={onDismissModal}>
-                                <IconClose size={MHS._20} color={theme.text}/>
+                                <IconClose size={MHS._20} color={theme.text} />
                             </Pressable>
-                            <TextBase title={alertContent?.title} fontSize={20} fontWeight="700"
-                                      style={[styles.txtTitle]}/>
+                            <TextBase title={alertContent?.title} fontSize={20} fontWeight="700" style={[styles.txtTitle]} />
                             {
                                 !alertContent?.actions?.[0] ? (
                                     <View>
                                         <AnimatedLottieView
                                             source={require("assets/lotties/congratulations.json")}
-                                            style={{width: WIDTH, height: VS._60}}
+                                            style={{ width: WIDTH, height: VS._60 }}
                                             autoPlay
                                             loop
                                         />
@@ -195,51 +204,39 @@ const AlertViewComponent = forwardRef((props: AlertViewProps, ref: React.Ref<Typ
                             }
                             {
                                 alertContent?.message != null ? <TextBase title={alertContent?.message} fontSize={16}
-                                                                          style={[styles.txtMessage, styleMessage, alertContent?.title ? {marginTop: 25} : undefined]}/> : null
+                                                                          style={[styles.txtMessage, styleMessage, alertContent?.title ? { marginTop: 25 } : undefined]} /> : null
                             }
+
 
                             <AdsNativeAlertView
                                 onAdClicked={() => {
-                                    console.log("Ad clicked alert")
-                                    alertContent?.actions?.[0] ? EnumAnalyticEvent.PressAdsPrev : EnumAnalyticEvent.PressAdsAfter
+                                    GlobalPopupHelper.admobGlobalRef.current?.setIgnoreOneTimeAppOpenAd()
+                                    logEventAnalytics(alertContent?.actions?.[0] ? EnumAnalyticEvent.PressAdsPrev : EnumAnalyticEvent.PressAdsAfter)
                                 }}
                                 ref={refNativeAds}
                                 onAddImpression={() => {
-                                    alertContent?.actions?.[0] ? EnumAnalyticEvent.ImpressionAdsPrev : EnumAnalyticEvent.ImpressionAdsAfter
+                                    logEventAnalytics(alertContent?.actions?.[0] ? EnumAnalyticEvent.ImpressionAdsPrev : EnumAnalyticEvent.ImpressionAdsAfter)
                                 }}
                             />
                             {
                                 alertContent?.actions?.[0] ? (
                                     <View
-                                        style={[styles.viewButton, width ? {width} : {}, {borderTopColor: theme.btnLightSmoke}]}>
-                                        {
-                                            showButton ? (
-                                                <TouchableOpacity
-                                                    onPress={() => {
-                                                        onDismissModal();
-                                                        setTimeout(() => {
-                                                            alertContent?.actions?.[0]?.onPress?.();
-                                                        }, 500);
-                                                    }}
-                                                    style={[styles.button, alertContent?.actions?.[0]?.style]}
-                                                >
-                                                    <TextBase title={alertContent?.actions?.[0]?.text}
-                                                              color={theme.text}
-                                                              fontSize={16}
-                                                              style={[styles.txtButton, alertContent?.actions?.[0]?.titleStyle]}/>
-                                                </TouchableOpacity>
-                                            ) : (
-                                                <View style={{
-                                                    flex: 1,
-                                                    justifyContent: "center",
-                                                    alignItems: "center"
-                                                }}>
-                                                    <ActivityIndicator size={'large'} color={theme.text}/>
-                                                </View>
-                                            )
-                                        }
+                                        style={[styles.viewButton, width ? { width } : {}, { borderTopColor: theme.btnLightSmoke }]}>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                onDismissModal();
+                                                setTimeout(() => {
+                                                    alertContent?.actions?.[0]?.onPress?.();
+                                                }, 500);
+                                            }}
+                                            style={[styles.button, alertContent?.actions?.[0]?.style]}
+                                        >
+                                            <TextBase title={alertContent?.actions?.[0]?.text} color={theme.text}
+                                                      fontSize={16}
+                                                      style={[styles.txtButton, alertContent?.actions?.[0]?.titleStyle]} />
+                                        </TouchableOpacity>
                                     </View>
-                                ) : <View style={{height: VS._20}}/>
+                                ) : <View style={{ height: VS._20 }} />
                             }
                         </View>
 
@@ -248,7 +245,7 @@ const AlertViewComponent = forwardRef((props: AlertViewProps, ref: React.Ref<Typ
             </View>
         </BottomSheet>
     );
-})
+}
 
 const styles = StyleSheet.create({
     container: {
@@ -262,7 +259,7 @@ const styles = StyleSheet.create({
         marginHorizontal: HS._2,
         flexWrap: 'nowrap',
         shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 1.5,
         elevation: 2,
@@ -272,7 +269,8 @@ const styles = StyleSheet.create({
         paddingTop: VS._14
     },
     txtTitle: {
-        textAlign: "center"
+        textAlign: "center",
+        marginTop:VS._10
     },
     txtMessage: {
         textAlign: "center",
@@ -308,25 +306,4 @@ const styles = StyleSheet.create({
     },
 });
 
-function AlertViewAds(props: AlertViewProps, ref: React.Ref<TypedAlert>) {
-    const {nativeAdsId} = useDisplayAds()
-    const isLoadedConfig = useAppSelector(state => state.control.isLoadedConfig)
-    const isPremium = useAppSelector(state => state.system.isPremium)
-
-    if (!isLoadedConfig) {
-        return null
-    }
-
-    if (!nativeAdsId) {
-        return null
-    }
-
-    if (isPremium) {
-        return null
-    }
-
-    return <AlertViewComponent ref={ref}/>
-}
-
-
-export default React.memo(forwardRef(AlertViewAds), isEqual);
+export default React.memo(forwardRef(AlertViewComponent), isEqual);

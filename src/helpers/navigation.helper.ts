@@ -39,7 +39,7 @@ const getActiveRouteName = (state) => {
 }
 
 const replace = (name, params = {}) => {
-  if (navigationRef.isReady()) {
+  if (navigationRef.isReady() && getRouteName() !== name) {
     navigationRef.dispatch(StackActions.replace(name, params))
   }
 }

@@ -1,20 +1,17 @@
-import {logEventAnalytics, useDisplayAds, useSystem} from 'helpers/system.helper';
-import React, {forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState} from 'react';
-import {StyleSheet, View} from 'react-native';
-import NativeAdView, {
-    AdBadge,
-    CallToActionView,
-    HeadlineView,
-    IconView,
-    NativeMediaView,
-    TaglineView
-} from 'react-native-admob-native-ads';
-import {Device} from 'ui/device.ui';
-import {FontSizes, FontWeights, HS, MHS, VS} from 'ui/sizes.ui';
-import {SystemTheme} from 'ui/theme';
-import {useAppDispatch} from "configs/store.config";
-import {switchAdsId} from "store/reducer/system.reducer.store";
-import {EnumAnalyticEvent} from "constants/anlytics.constant";
+import TextBase from "components/TextBase";
+import { useAppDispatch } from "configs/store.config";
+import { EnumAnalyticEvent } from "constants/anlytics.constant";
+import { GlobalPopupHelper } from "helpers/index";
+import { logEventAnalytics, useDisplayAds, useSystem } from 'helpers/system.helper';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { Linking, Pressable, StyleSheet, View } from "react-native";
+import NativeAdView, { AdBadge, CallToActionView, HeadlineView, IconView, NativeMediaView, TaglineView } from 'react-native-admob-native-ads';
+import FastImage from "react-native-fast-image";
+import { switchAdsId } from "store/reducer/system.reducer.store";
+import { Device } from 'ui/device.ui';
+import { FontSizes, FontWeights, HS, MHS, VS } from 'ui/sizes.ui';
+import { SystemTheme } from 'ui/theme';
+import {randomAppAds} from "constants/system.constant";
 
 interface Props {
     onAdClicked: () => void
@@ -23,38 +20,39 @@ interface Props {
 
 const WIDTH = Math.min(Device.width - HS._32, Device.width - 16)
 
-const AdsNativeAdmob = ({onAdClicked, onAddImpression}: Props, ref) => {
+const AdsNativeAdmob = ({ onAdClicked, onAddImpression }: Props, ref) => {
     const dispatch = useAppDispatch()
-    const {styles, theme} = useSystem(createStyles)
-    const {nativeAdsId} = useDisplayAds()
+    const { styles, theme } = useSystem(createStyles)
+    const { nativeAdsId, use_native_ads } = useDisplayAds()
     const nativeAdViewRef = useRef<NativeAdView>(null);
     const [dataAds, setDataAds] = useState<any>()
-    const [readyToShowAds, setReadyToShowAds] = useState(true)
+    const [readyToShowAds, setReadyToShowAds] = useState(!Device.isIos)
     const adAlreadyImpression = useRef(false)
     const refShouldReLoadAds = useRef<boolean>(false)
+    const [clicked, setClicked] = useState(false)
+    const refDataAdsEcosystem = useRef(randomAppAds())
 
     useEffect(() => {
         if (readyToShowAds) {
-            console.log("a")
             const interval = setInterval(() => {
                 if (nativeAdViewRef.current) {
-                    console.log("c")
                     clearInterval(interval)
                     nativeAdViewRef.current?.loadAd()
                 }
-            }, 50)
+            }, 100)
         } else {
-            console.log("b")
-            setReadyToShowAds(true)
+            setTimeout(() => {
+                setReadyToShowAds(true)
+            }, Device.isIos ? 200 : 0);
         }
     }, [readyToShowAds])
 
     useEffect(() => {
-        if (nativeAdsId && refShouldReLoadAds.current) {
+        if (nativeAdsId && refShouldReLoadAds.current && use_native_ads) {
             refShouldReLoadAds.current = false;
             nativeAdViewRef.current?.loadAd();
         }
-    }, [nativeAdsId])
+    }, [nativeAdsId, use_native_ads])
 
 
     useImperativeHandle(ref, () => ({
@@ -62,6 +60,7 @@ const AdsNativeAdmob = ({onAdClicked, onAddImpression}: Props, ref) => {
         loadAd: () => {
             setDataAds(undefined)
             if (adAlreadyImpression.current) {
+                setClicked(false);
                 adAlreadyImpression.current = false
                 setReadyToShowAds(false)
             }
@@ -72,7 +71,12 @@ const AdsNativeAdmob = ({onAdClicked, onAddImpression}: Props, ref) => {
 
     const onAdFailedToLoad = useCallback((error) => {
         if (!(error.code == 0 && error.currencyCode == "USD")) {
-            logEventAnalytics(EnumAnalyticEvent.NativeAdsFailedToLoad + "alert")
+            logEventAnalytics(EnumAnalyticEvent.NativeAdsFailedToLoad + "alert",{
+                //@ts-ignore
+                code: error?.code,
+                message: error?.message,
+                currencyCode: error?.currencyCode
+            })
             console.log(EnumAnalyticEvent.NativeAdsFailedToLoad + "alert")
             console.log("Call switchAdsId alert")
             dispatch(switchAdsId("native"))
@@ -87,9 +91,11 @@ const AdsNativeAdmob = ({onAdClicked, onAddImpression}: Props, ref) => {
     }, [])
 
     const onAdClickedCurrent = useCallback(() => {
+        GlobalPopupHelper.admobGlobalRef.current?.setIgnoreOneTimeAppOpenAd();
         logEventAnalytics(EnumAnalyticEvent.NativeAdsClicked + "alert")
         console.log(EnumAnalyticEvent.NativeAdsClicked + "alert")
         onAdClicked?.()
+        setClicked(true)
     }, [onAdClicked])
 
     const onAdImpression = useCallback(() => {
@@ -117,9 +123,74 @@ const AdsNativeAdmob = ({onAdClicked, onAddImpression}: Props, ref) => {
     const onAdLoaded = useCallback(() => {
         logEventAnalytics(EnumAnalyticEvent.NativeAdsLoaded + "alert")
         console.log(EnumAnalyticEvent.NativeAdsLoaded + "alert")
+        refDataAdsEcosystem.current = randomAppAds();
     }, [])
 
     //////////////
+
+    if(clicked){
+        return (
+            <Pressable
+                onPress={() => {
+                    logEventAnalytics(EnumAnalyticEvent.EcosystemAdsClick+"_"+refDataAdsEcosystem.current.name)
+                    GlobalPopupHelper.admobGlobalRef.current?.setIgnoreOneTimeAppOpenAd();
+                    Linking.openURL(refDataAdsEcosystem.current.link);
+                }}
+                style={{width:'100%'}}>
+                <View style={{ paddingHorizontal: HS._16}}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: HS._8 }}>
+                        <FastImage
+                            source={refDataAdsEcosystem.current.logo}
+                            style={{
+                                width: 40,
+                                height: 40
+                            }}
+                            resizeMode={"contain"}
+                        />
+                        <View style={{ flex: 1 }}>
+                            <TextBase title={refDataAdsEcosystem.current.title}
+                                      style={{ fontWeight: "bold", fontSize: 13, color: theme.text }} />
+                            <TextBase title={refDataAdsEcosystem.current.description} numberOfLines={2}
+                                      style={{ fontSize: 11, color: theme.text }} />
+                        </View>
+                    </View>
+                </View>
+                <View style={{ width: "100%", flexDirection: "row", justifyContent:'center' }}>
+                    <FastImage
+                        source={refDataAdsEcosystem.current.image[0]}
+                        style={{
+                            width: "20%",
+                            height: VS._120
+                        }}
+                        resizeMode={"contain"}
+                    />
+                    <FastImage
+                        source={refDataAdsEcosystem.current.image[1]}
+                        style={{
+                            width: "20%",
+                            height: VS._120
+                        }}
+                        resizeMode={"contain"}
+                    />
+                    <FastImage
+                        source={refDataAdsEcosystem.current.image[2]}
+                        style={{
+                            width: "20%",
+                            height: VS._120
+                        }}
+                        resizeMode={"contain"}
+                    />
+                </View>
+
+                <View
+                    style={{ ...styles.buttonAds, backgroundColor: theme.btnActive, alignSelf:'center' }}
+                >
+                    <TextBase title={"Confirm"} numberOfLines={2} style={{ fontSize: FontSizes._16, color: theme.textLight }}
+                              fontWeight={"bold"} />
+                </View>
+            </Pressable>
+        )
+    }
 
     if (!readyToShowAds) {
         return null
@@ -127,7 +198,7 @@ const AdsNativeAdmob = ({onAdClicked, onAddImpression}: Props, ref) => {
 
     return (
         <NativeAdView
-            style={{width: "100%", paddingBottom: MHS._4}}
+            style={{ width: "100%", paddingBottom: MHS._4 }}
             ref={nativeAdViewRef}
             adChoicesPlacement="bottomRight"
             adUnitID={nativeAdsId}
@@ -148,22 +219,22 @@ const AdsNativeAdmob = ({onAdClicked, onAddImpression}: Props, ref) => {
             {
                 dataAds ? (
                     <>
-                        <View style={{flexGrow: 1, flexShrink: 1, paddingHorizontal: HS._16,}}>
-                            <AdBadge/>
-                            <View style={{flexDirection: "row", alignItems: "center", gap: HS._8}}>
-                                <IconView style={{width: 40, height: 40}}/>
-                                <View style={{flex: 1}}>
-                                    <HeadlineView style={{fontWeight: 'bold', fontSize: 13, color: theme.text}}/>
-                                    <TaglineView numberOfLines={2} style={{fontSize: 11, color: theme.text}}/>
+                        <View style={{ flexGrow: 1, flexShrink: 1, paddingHorizontal: HS._16, }}>
+                            <AdBadge />
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: HS._8 }}>
+                                <IconView style={{ width: 40, height: 40 }} />
+                                <View style={{ flex: 1 }}>
+                                    <HeadlineView style={{ fontWeight: 'bold', fontSize: 13, color: theme.text }} />
+                                    <TaglineView numberOfLines={2} style={{ fontSize: 11, color: theme.text }} />
                                 </View>
                             </View>
                         </View>
-                        <NativeMediaView style={styles.mediaView}/>
+                        <NativeMediaView style={styles.mediaView} />
 
                         <CallToActionView
-                            style={{...styles.buttonAds, backgroundColor: theme.btnActive}}
+                            style={{ ...styles.buttonAds, backgroundColor: theme.btnActive }}
                             textStyle={styles.titleButton}
-                            buttonAndroidStyle={{...styles.buttonAds, backgroundColor: theme.btnActive}}
+                            buttonAndroidStyle={{ ...styles.buttonAds, backgroundColor: theme.btnActive }}
                             allowFontScaling={false}
                             allCaps
                         />
