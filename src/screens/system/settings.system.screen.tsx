@@ -17,8 +17,9 @@ import Switch from 'components/Switch';
 
 const SettingsSystemScreen = () => {
   const { styles } = useSystem(createStyles);
-  const { suggestQuestion, genderVoice, enableSpeech } = useAppSelector(state => state.system)
-  const { isAuthenticated } = useAppSelector(state => state.user)
+  const enableSpeech = useAppSelector(state => state.system.enableSpeech)
+  const suggestQuestion = useAppSelector(state => state.system.suggestQuestion)
+  const isAuthenticated  = useAppSelector(state => state.user.isAuthenticated)
   const dispatch = useAppDispatch()
 
   const onPressDeleteAccount = () => {

@@ -179,10 +179,8 @@ const KeyboardInput = ({
     const [isLoadingSpeech, setIsLoadingSpeech] = useState<boolean>(false)
     const [isRecording, setIsRecording] = useState(false)
     const [isSpeeching, setIsSpeeching] = useState(false)
-    const {
-        freeVoice,
-        isPremium
-    } = useAppSelector(state => state.system)
+    const isPremium = useAppSelector(state => state.system.isPremium)
+    const freeVoice = useAppSelector(state => state.system.freeVoice)
     const animationTyping = useSharedValue(0)
     const animationRecord = useSharedValue(0)
     const animationBackgroundColor = useSharedValue(0)

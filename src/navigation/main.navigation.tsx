@@ -99,6 +99,7 @@ const MainNavigator = () => {
     const lastChoiceCountry = useAppSelector(state => state.system.lastChoiceCountry)
     const fontName = useAppSelector(state => state.system.fontName)
     const isPremium = useAppSelector(state => state.system.isPremium)
+    const shouldShowWelcome = useAppSelector(state => state.system.shouldShowWelcome);
 
     useEffect(() => {
         if (shouldGoToTrueScreenAfterReConnect) {
@@ -124,8 +125,7 @@ const MainNavigator = () => {
 
     return (
         <MainStack.Navigator
-            initialRouteName={NAVIGATION_BLANK}
-            // initialRouteName={NAVIGATION_LOADING}
+            initialRouteName={isPremium ? "DrawerNavigator" : ((native_ads_country && (lastChoiceCountry === undefined || dayjs().diff(dayjs(lastChoiceCountry), "minutes") > 4320)) ? NAVIGATION_CHOOSE_COUNTRY_SCREEM : (shouldShowWelcome ? NAVIGATION_WELCOME : NAVIGATION_PREMIUM_SERVICE_SCREEN))}
             screenOptions={{
                 headerStyle: {
                     borderBottomWidth: StyleSheet.hairlineWidth,

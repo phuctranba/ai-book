@@ -18,7 +18,8 @@ import HeaderSettings from './components/header.settings';
 
 const SettingsScreen = () => {
   const { styles, theme } = useSystem(createStyles)
-  const { account, isAuthenticated } = useAppSelector(state => state.user)
+  const account = useAppSelector(state => state.user.account)
+  const isAuthenticated = useAppSelector(state => state.user.isAuthenticated)
   const dispatch = useAppDispatch()
 
   const onPressSetting = () => {

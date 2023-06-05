@@ -9,11 +9,10 @@ interface Props {
 }
 
 const AdsNativeAlertView = ({onAdClicked, onAddImpression}: Props, ref) => {
-  const isLoadedConfig = useAppSelector(state => state.control.isLoadedConfig)
   const isPremium = useAppSelector(state => state.system.isPremium)
-  const {native_ads_pre, native_ads_after} = useDisplayAds()
+  const {native_ads_pre, native_ads_after, nativeAdsId} = useDisplayAds()
 
-  if (isPremium || !isLoadedConfig || (!native_ads_pre && !native_ads_after))
+  if (isPremium || !nativeAdsId || (!native_ads_pre && !native_ads_after))
     return null;
 
   return (

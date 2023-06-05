@@ -1,26 +1,14 @@
-import React, {
-    createRef,
-    forwardRef,
-    memo,
-    useCallback,
-    useEffect,
-    useImperativeHandle,
-    useMemo,
-    useRef,
-    useState
-} from "react";
-import {Animated, Linking, Pressable, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import React, {forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, useState} from "react";
+import {Animated, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {Device} from "ui/device.ui";
 import {FontSizes, FontWeights, HS, MHS, VS} from "ui/sizes.ui";
 import LottieView from "lottie-react-native";
-import {useSystem} from "helpers/system.helper";
+import {SUBSCRIPTIONS, useSystem} from "helpers/system.helper";
 import {RootColor, SystemTheme} from "ui/theme";
-import TextBase from "components/TextBase";
-import FastImage from 'react-native-fast-image';
-import {Shadow2} from "ui/shadow.ui";
-import {languages} from 'languages';
+import {setIsPremium, setUseNormalSummary} from "store/reducer/system.reducer.store";
+import {GlobalPopupHelper} from "helpers/index";
+import {useIAP} from "react-native-iap";
 import {useAppDispatch} from "configs/store.config";
-import {setIsPressRate} from "store/reducer/system.reducer.store";
 
 interface IButtonPopupProps {
     content: string;
@@ -35,45 +23,17 @@ interface IPopupProps {
     leftBtn?: IButtonPopupProps;
 }
 
-const ListEmoji = [
-    {
-        emoji: require("assets/lotties/rate1.json"),
-        point: 1
-    },
-    {
-        emoji: require("assets/lotties/rate2.json"),
-        point: 2
-    },
-    {
-        emoji: require("assets/lotties/rate3.json"),
-        point: 3
-    },
-    {
-        emoji: require("assets/lotties/rate4.json"),
-        point: 4
-    },
-    {
-        emoji: require("assets/lotties/rate5.json"),
-        point: 5
-    },
-]
-
 export const GlobalPopupApp = forwardRef((props, ref) => {
     const {styles, theme} = useSystem(createStyles);
-    const dispatch = useAppDispatch()
-
 
     const [isLoading, setLoading] = useState(false);
     const [isProgress, setIsProgress] = useState(false);
     const [progressContent, setProgressContent] = useState<string>("");
     const [isShowPopup, setIsShowPopup] = useState(false);
-    const [isShowRating, setIsShowRating] = useState(false);
-    const [pointRate, setPointRate] = useState<number>(-1);
     const refIconPopup = useRef<any>();
     const refContentPopup = useRef<string[]>();
     const refLeftBtnPopup = useRef<IButtonPopupProps>();
     const refRightBtnPopup = useRef<IButtonPopupProps>();
-    const refRateItem = useMemo(() => ListEmoji.map(() => createRef<any>()), []);
 
 
     const counter = useRef(new Animated.Value(0)).current;
@@ -89,17 +49,65 @@ export const GlobalPopupApp = forwardRef((props, ref) => {
             showProgress,
             hideLoading,
             hideProgress,
-            showPopup,
-            showRate
+            showPopup
         }),
         []
     );
 
-    const showRate = (autoHide: boolean = true) => {
-        setIsShowRating(true);
-        setIsShowPopup(false);
-        setLoading(false);
-    };
+    const dispatch = useAppDispatch();
+    const firstTimeCheckIsPremium = useRef(true);
+
+    const { availablePurchases, getAvailablePurchases } = useIAP();
+
+    useEffect(() => {
+        GlobalPopupHelper.alertAdsRef.current?.close();
+        const getListSubscription = async () => {
+            try {
+                await getAvailablePurchases();
+            } catch (error) {
+                console.log("init error", error);
+            }
+        };
+
+        getListSubscription();
+    }, []);
+
+    useEffect(() => {
+        if (!firstTimeCheckIsPremium.current) {
+            if (Device.isAndroid) {
+                const premium = Array.isArray(availablePurchases) && availablePurchases.find(item => SUBSCRIPTIONS.find(i => i == item?.productId)) ? true : false;
+                dispatch(setIsPremium(premium));
+                dispatch(setUseNormalSummary(!premium))
+            } else {
+                // const checkPremium = async () => {
+                //   const sortedAvailablePurchases = availablePurchases.sort(
+                //       (a, b) => b.transactionDate - a.transactionDate
+                //   );
+                //   try {
+                //     const receipt = await validateReceiptIos({
+                //       receiptBody: {
+                //         "receipt-data": sortedAvailablePurchases[0].transactionReceipt,
+                //         password: SHARED_SERCET_KEY_APPLE // app shared secret, can be found in App Store Connect
+                //       }
+                //     });
+                //     const renewalHistory = receipt.latest_receipt_info;
+                //     const isSubValid = !!renewalHistory.find(receipt => {
+                //       const expirationInMilliseconds = Number(receipt.expires_date_ms);
+                //       const nowInMilliseconds = Date.now();
+                //       return expirationInMilliseconds > nowInMilliseconds;
+                //     });
+                //     dispatch(setIsPremium(isSubValid ? true : false));
+                // dispatch(setUseNormalSummary(!(isSubValid ? true : false)))
+                //   } catch (error) {
+                //     dispatch(setIsPremium(false));
+                //   }
+                // };
+                // checkPremium();
+            }
+        } else {
+            firstTimeCheckIsPremium.current = false;
+        }
+    }, [availablePurchases]);
 
     const showLoading = (autoHide: boolean = true) => {
         setIsShowPopup(false);
@@ -230,51 +238,6 @@ export const GlobalPopupApp = forwardRef((props, ref) => {
         setIsShowPopup(false)
     }, [])
 
-    const onPressRate = useCallback((index: number) => {
-        setPointRate(index);
-        refRateItem[index].current?.play();
-    }, [])
-
-    const renderRate = (item: { emoji: any, point: number }, index: number) => {
-        return (
-            <TouchableOpacity
-                activeOpacity={0.5}
-                key={item.point.toString()}
-                onPress={() => onPressRate(index)}
-                style={{
-                    padding: MHS._4,
-                    backgroundColor: pointRate === index ? RootColor.MainColor : RootColor.WhiteSmoke,
-                    borderRadius: MHS._50,
-                    marginHorizontal: HS._4
-                }}>
-                <LottieView speed={1.5}
-                            loop={false}
-                            ref={refRateItem[index]}
-                            source={item.emoji}
-                            style={{width: MHS._46, height: MHS._46}}/>
-            </TouchableOpacity>
-        )
-    }
-
-    const onRate = () => {
-        if (pointRate <= 2) {
-            Linking.openURL('mailto:support@appuni.io?subject=ChatGPT_Feedback')
-        } else {
-            dispatch(setIsPressRate(true))
-            if (Device.isAndroid) {
-                Linking.openURL(`https://play.google.com/store/apps/details?id=com.iceo.aichat`)
-            } else {
-                Linking.openURL("itms-apps://apps.apple.com/us/app/chatai-bot-assistant/id6446157680")
-            }
-        }
-        hideRate()
-    }
-
-    const hideRate = () => {
-        setIsShowRating(false);
-        setPointRate(-1);
-    }
-
     return (
         <View style={styles.container}>
             {isLoading &&
@@ -330,51 +293,6 @@ export const GlobalPopupApp = forwardRef((props, ref) => {
                     </View>
                 </View>}
 
-            {isShowRating &&
-                <Pressable style={styles.containerRating} onPress={hideRate}>
-                    <Pressable style={styles.viewRating}>
-                        <FastImage
-                            style={{
-                                width: Device.width / 4,
-                                height: Device.width / 4,
-                                borderRadius: MHS._12,
-                                marginBottom: VS._12, ...Shadow2
-                            }}
-                            source={require("assets/images/logo.png")}
-                        />
-
-                        <TextBase fontWeight={"900"} fontSize={FontSizes._22} color={RootColor.DarkBackground}
-                                  title={languages.rate.doYouLike}/>
-                        <TextBase fontWeight={"900"}
-                                  style={{marginBottom: VS._18}}
-                                  fontSize={FontSizes._22}
-                                  color={RootColor.DarkBackground} title={"ChatGPT - AI Chat bot"}/>
-
-                        <TextBase color={RootColor.LightText} title={languages.rate.workHard}
-                                  style={{textAlign: 'center'}}/>
-                        <TextBase
-                            style={{marginBottom: VS._18, textAlign: 'center'}}
-                            color={RootColor.LightText} title={languages.rate.hopeRate}/>
-
-                        <View style={{flexDirection: 'row', marginBottom: VS._38}}>
-                            {ListEmoji.map(renderRate)}
-                        </View>
-
-                        <TextBase
-                            style={{marginBottom: VS._28, textAlign: 'center', marginHorizontal:HS._12}}
-                            fontWeight={"900"}
-                            color={RootColor.MainColor} title={languages.rate.noShow}/>
-
-                        <TouchableOpacity
-                            disabled={pointRate === -1}
-                            onPress={onRate}
-                            style={[styles.btnRate, {backgroundColor: pointRate !== -1 ? RootColor.MainColor : theme.btnInactive}]}>
-                            <Text
-                                style={[styles.txtBtn, {fontSize: FontSizes._16}]}>{pointRate <= 2 ? languages.rate.sendFeedBack : languages.rate.rateApp}</Text>
-                        </TouchableOpacity>
-                    </Pressable>
-                </Pressable>}
-
         </View>
     );
 });
@@ -390,12 +308,6 @@ const createStyles = (theme: SystemTheme) => {
             backgroundColor: 'rgba(0,0,0,0.6)',
             justifyContent: "center",
             alignItems: "center"
-        },
-        containerRating: {
-            width: Device.width,
-            height: Device.heightSafeWithStatus,
-            backgroundColor: 'rgba(0,0,0,0.6)',
-            justifyContent: "flex-end",
         },
         containerProgress: {
             flex: 1,
@@ -418,14 +330,6 @@ const createStyles = (theme: SystemTheme) => {
             paddingHorizontal: HS._12,
             paddingVertical: VS._16
         },
-        viewRating: {
-            backgroundColor: '#fff',
-            width: "100%",
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingHorizontal: HS._12,
-            paddingVertical: VS._28
-        },
         txtPopup: {
             color: theme.text,
             fontSize: FontSizes._16,
@@ -443,13 +347,6 @@ const createStyles = (theme: SystemTheme) => {
         btn: {
             width: '40%',
             paddingVertical: VS._10,
-            alignItems: 'center',
-            borderRadius: MHS._30,
-        },
-        btnRate: {
-            width: '80%',
-            backgroundColor: RootColor.MainColor,
-            paddingVertical: VS._14,
             alignItems: 'center',
             borderRadius: MHS._30,
         },

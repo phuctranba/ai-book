@@ -35,7 +35,7 @@ export const DATA_ECOSYSTEM_ADS = [
             android: "https://play.google.com/store/apps/details?id=com.zipenter.aitax",
             default: "https://play.google.com/store/apps/details?id=com.zipenter.aitax"
         }),
-        logo: require("assets/images/logo_tax.png"),
+        logo: require("assets/images/logo_tax.jpg"),
         title:"AI Tax",
         description:"Immediately answer all your question about the tax in the most exact way",
         image:[

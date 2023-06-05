@@ -51,9 +51,7 @@ const SummaryScreen = () => {
     const refTypingText = useRef<any>()
     const textAnswer = useRef<string>("")
     const navigation: any = useNavigation();
-    const {
-        freeSummaryCount,
-    } = useAppSelector(state => state.system)
+    const freeSummaryCount = useAppSelector(state => state.system.freeSummaryCount)
     const showModalRate = useAppSelector(state => state.control.showModalRate)
     const {
         displayAlertAds,

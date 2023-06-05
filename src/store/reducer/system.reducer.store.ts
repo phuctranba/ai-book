@@ -26,6 +26,7 @@ interface InitialState {
     fontName: string
     stateToImpression: object
     speedSSEMessage: 1 | 2 | 3 | 4 | 5,
+    getConfigDone: boolean,
     useNormalSummary: boolean,
     sizeText: 0.9 | 1 | 1.1 | 1.2 | 1.3,
     firstInstall: {
@@ -85,6 +86,7 @@ const initialState: InitialState = {
     stateToImpression: {},
     isConnectedInternet: true,
     suggestQuestion: false,
+    getConfigDone: false,
     speedSSEMessage: 2,
     useNormalSummary: true,
     sizeText: 1,
@@ -203,9 +205,9 @@ export const getSystem = createAsyncThunk(
             native_ads_list: native_ads_list.asBoolean(),
             use_reward_ads: use_reward_ads.asBoolean(),
             use_open_ads: use_open_ads.asBoolean(),
-            key_native_ads: __DEV__ ? TestNativeIds.Image : (key_native_ads.asString() || ADS_ID),
-            key_reward_ads: __DEV__ ? TestIds.REWARDED : (key_reward_ads.asString() || KEY_REWARD_ADS_MOB),
-            key_open_ads: __DEV__ ? TestIds.APP_OPEN : (key_open_ads.asString() || KEY_OPEN_ADS_MOB),
+            key_native_ads: __DEV__ ? TestNativeIds.Image : (key_native_ads.asString() || ""),
+            key_reward_ads: __DEV__ ? TestIds.REWARDED : (key_reward_ads.asString() || ""),
+            key_open_ads: __DEV__ ? TestIds.APP_OPEN : (key_open_ads.asString() || ""),
             chatgpt_key: chatgpt_key.asString() || "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",
             key_google_cloud: key_google_cloud.asString() || "AIzaSyBWVQcb2lWNVv4K-st0_iSxKBZxN69DOZM",
             free_credit_of_ads: Number.isInteger(free_credit_of_ads.asNumber())?free_credit_of_ads.asNumber(): 3,
@@ -488,6 +490,7 @@ export const System = createSlice({
             .addMatcher(isFulfilled(getSystem), (state, action) => {
                 return {
                     ...state,
+                    getConfigDone: true,
                     freeSummaryCount: state.config.free_credit_of_ads === -1 ? action.payload.free_credit_of_ads : state.freeSummaryCount,
                     config: action.payload,
                     nativeAdsId: action.payload?.key_native_ads?.split("#")?.[0],

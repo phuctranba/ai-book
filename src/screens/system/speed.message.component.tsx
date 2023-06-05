@@ -20,7 +20,7 @@ const QUOTE = "Do the difficult things while they are easy and do the great thin
 const SpeedMessageComponent = () => {
   const { styles, theme } = useSystem(createStyles)
 
-  const { speedSSEMessage } = useAppSelector(state => state.system)
+  const speedSSEMessage  = useAppSelector(state => state.system.speedSSEMessage)
   const refTypingText = useRef<any>()
   const translateX = useSharedValue((speedSSEMessage - 1) * (WIDTH / 4) - WIDTH_BOX / 2)
   const dispatch = useAppDispatch()

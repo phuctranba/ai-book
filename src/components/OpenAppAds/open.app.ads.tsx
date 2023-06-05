@@ -5,26 +5,11 @@ import { useDisplayAds } from 'helpers/system.helper';
 
 const OpenAppAds = (_, ref) => {
   const { openAdsId, use_open_ads } = useDisplayAds()
-  const isLoadedConfig = useAppSelector(state => state.control.isLoadedConfig)
   const isPremium = useAppSelector(state => state.system.isPremium)
 
-  if(isPremium){
+  if (isPremium || !openAdsId || !use_open_ads) {
     return null
   }
-
-  if (!isLoadedConfig) {
-    return null
-  }
-
-  if (!openAdsId) {
-    return null
-  }
-
-  if (!use_open_ads) {
-    return null
-  }
-
-
 
   return (
       <AdmobApp ref={ref} />

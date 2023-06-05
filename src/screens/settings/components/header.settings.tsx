@@ -17,7 +17,7 @@ const HEIGHT_HEADER = Device.heightPaddingStatusBar + MHS._100;
 
 const HeaderSettings = () => {
   const { styles, theme } = useSystem(createStyle);
-  const { account } = useAppSelector(state => state.user);
+  const account  = useAppSelector(state => state.user.account);
 
   const goToBuy = () => {
     // navigationHelper.navigate(NAVIGATION_PREMIUM_ACCOUNT)

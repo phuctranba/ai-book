@@ -19,8 +19,8 @@ import DisconnectNetworkScreen from "./disconect.network.screen";
 import MainNavigator from "./main.navigation";
 import remoteConfig from "@react-native-firebase/remote-config";
 import {usePurchase} from "helpers/purchase.helper";
-import {logEventAnalytics, PRODUCTS, SUBSCRIPTIONS} from "helpers/system.helper";
-import {NumOfRoute} from "constants/router.constant";
+import {PRODUCTS, SUBSCRIPTIONS, useDisplayAds} from "helpers/system.helper";
+import dayjs from "dayjs";
 
 const {CustomModule} = NativeModules
 
@@ -49,8 +49,10 @@ function AppNavigation() {
     const dispatch = useAppDispatch()
     const refIsConnectionInternet = useRef<boolean>(true);
     const fontName = useAppSelector(state => state.system.fontName)
-    const refFlow = useRef<string>("FLOW_");
-    const refFlowCount = useRef<number>(0);
+    const isPremium = useAppSelector(state => state.system.isPremium)
+    const {native_ads_country} = useDisplayAds()
+    const lastChoiceCountry = useAppSelector(state => state.system.lastChoiceCountry)
+
     /**
      * Để đây cho nó Impression
      */
@@ -65,7 +67,7 @@ function AppNavigation() {
             if (state.isConnected !== refIsConnectionInternet.current) {
                 refIsConnectionInternet.current = state.isConnected || false;
                 if (state.isConnected) {
-                    navigationHelper.replace("NAVIGATION_MAIN",{shouldGoToTrueScreenAfterReConnect: true})
+                    navigationHelper.replace("NAVIGATION_MAIN", {shouldGoToTrueScreenAfterReConnect: true})
                 } else {
                     navigationHelper.replace("NAVIGATION_DISCONNECTED_NETWORK")
                 }
@@ -74,7 +76,7 @@ function AppNavigation() {
 
         remoteConfig().setConfigSettings({
             minimumFetchIntervalMillis: 600000,
-        }).then(()=>{
+        }).then(() => {
             dispatch(getSystem())
         });
 
@@ -118,20 +120,15 @@ function AppNavigation() {
     return (
         <NavigationContainer ref={navigationRef}
                              onReady={() => {
-                                 RNBootSplash.hide({fade: false})
+                                 if (isPremium || !native_ads_country || !(lastChoiceCountry === undefined || dayjs().diff(dayjs(lastChoiceCountry), "minutes") > 4320)) {
+                                     RNBootSplash.hide({fade: false});
+                                 }
                              }}
                              onStateChange={async (state: NavigationState | undefined) => {
                                  const previousRouteName = navigationRef.current;
                                  const currentRouteName = navigationHelper.getActiveRouteName(state);
 
                                  if (previousRouteName !== currentRouteName && !__DEV__) {
-                                     refFlow.current=refFlow.current+(NumOfRoute[currentRouteName]||"")
-                                     refFlowCount.current++;
-                                     if(refFlowCount.current===5){
-                                         logEventAnalytics(refFlow.current)
-                                     }
-
-
                                      try {
                                          await firebase.analytics().logScreenView({
                                              screen_name: currentRouteName,
@@ -163,8 +160,8 @@ function AppNavigation() {
                         component={DisconnectNetworkScreen}
                         options={{
                             headerShown: false,
-                            headerTitleStyle:{
-                                fontFamily:fontName+"-Medium"
+                            headerTitleStyle: {
+                                fontFamily: fontName + "-Medium"
                             }
                         }}
                     />

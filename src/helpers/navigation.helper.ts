@@ -25,6 +25,7 @@ const getRouteName = () => {
   if (navigationRef.isReady()) {
     return navigationRef.getCurrentRoute()?.name
   }
+  return ""
 }
 
 const getActiveRouteName = (state) => {

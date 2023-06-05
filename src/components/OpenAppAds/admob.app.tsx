@@ -28,7 +28,7 @@ export const Admob = forwardRef(({enableAppOpenAd = true}: TypedAdmobProps, ref:
     const {openAdsId} = useDisplayAds()
     const canShowOpenAdmob = useRef<boolean>(true);
     const dispatch = useAppDispatch()
-    const isPremium: boolean = useAppSelector((state) => state.system.isPremium);
+    const isPremium = useAppSelector((state) => state.system.isPremium);
     const refRouterName = useRef<string | undefined>()
     const [isReadyToLoadAdmob, setIsReadyToLoadAdmob] = useState(false)
     const appOpenAd = useAppOpenAd(openAdsId, {

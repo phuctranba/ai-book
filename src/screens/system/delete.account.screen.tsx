@@ -14,7 +14,7 @@ import { SystemTheme } from 'ui/theme';
 const DeleteAccount = () => {
   const { styles, theme } = useSystem(createStyle)
   const textInputRef = useRef("")
-  const { account }: { account: TypedUser } = useAppSelector(state => state.user)
+  const account  = useAppSelector(state => state.user.account)
   const dispatch = useAppDispatch()
 
   const onPressDelete = () => {

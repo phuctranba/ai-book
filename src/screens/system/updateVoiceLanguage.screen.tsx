@@ -12,7 +12,7 @@ import {IconCheck} from "assets/svgIcons";
 const UpdateVoiceLanguageScreen = () => {
     const {styles, theme} = useSystem(createStyle)
     const dispatch = useAppDispatch()
-    const {languageVoice} = useAppSelector(state => state.system)
+    const languageVoice = useAppSelector(state => state.system.languageVoice)
 
 
     const renderItem = useCallback(({item}: { item: { code: string, name: string } }) => {

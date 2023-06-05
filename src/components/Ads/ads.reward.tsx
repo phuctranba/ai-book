@@ -16,29 +16,15 @@ export interface TypedAdsRef {
 const AdsRewardComponent = (_, ref: React.Ref<TypedAdsRef>) => {
     const {use_reward_ads, rewardAdsId} = useDisplayAds()
     const rewardRef = useRef<any>()
-    const isLoadedConfig = useAppSelector(state => state.control.isLoadedConfig)
     const isPremium = useAppSelector(state => state.system.isPremium)
 
     useImperativeHandle(ref, () => ({
         showAds: (cb) => {
             rewardRef.current?.showAds(cb)
         }
-    }), [isLoadedConfig])
+    }), [isPremium, use_reward_ads, rewardAdsId])
 
-    if (!isLoadedConfig) {
-        return null
-    }
-
-
-    if (!rewardAdsId) {
-        return null
-    }
-
-    if (!use_reward_ads) {
-        return null
-    }
-
-    if(isPremium){
+    if (isPremium || !rewardAdsId || !use_reward_ads) {
         return null
     }
 

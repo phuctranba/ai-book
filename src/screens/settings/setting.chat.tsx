@@ -17,8 +17,9 @@ import { SystemTheme } from 'ui/theme';
 const SettingChatScreen = () => {
   const { styles, theme } = useSystem(createStyles)
   const dispatch = useAppDispatch()
-  const { suggestQuestion, isPremium } = useAppSelector(state => state.system)
-  const { isAuthenticated } = useAppSelector(state => state.user)
+  const suggestQuestion = useAppSelector(state => state.system.suggestQuestion)
+  const isPremium = useAppSelector(state => state.system.isPremium)
+  const isAuthenticated  = useAppSelector(state => state.user.isAuthenticated)
 
   const onPressSkip = () => {
     // GlobalPopupHelper.alertRef.current?.alert({

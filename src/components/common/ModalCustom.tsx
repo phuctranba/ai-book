@@ -39,6 +39,7 @@ export default function ModalCustom(props: ModalCustomProps) {
       deviceHeight={Device.heightScreen}
       onBackdropPress={onDismiss}
       // onBackButtonPress={onDismiss}
+      coverScreen={false}
     >
       {children}
     </Modal>

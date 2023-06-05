@@ -256,7 +256,7 @@ const WelcomeScreen = () => {
 
                 {
                     (index === 2) ?
-                        (!clicked ?
+                        ((!clicked && nativeAdsId) ?
                                 <NativeAdView
                                     // style={styles.buttonContinueContainer}
                                     ref={nativeAdViewRef}

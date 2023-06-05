@@ -23,7 +23,8 @@ const PremiumServiceScreen = () => {
     const [loading, setLoading] = useState(true)
     const dispatch = useAppDispatch()
     const initTimeout = useRef(true)
-    const {subscriptionIds, subscriptionsLocal} = useAppSelector(state => state.system)
+    const subscriptionIds = useAppSelector(state => state.system.subscriptionIds)
+    const subscriptionsLocal = useAppSelector(state => state.system.subscriptionsLocal)
     const isFocus = useIsFocused()
     const {initIAP, subscriptions, buySubscription} = usePurchase(isFocus)
 

@@ -3,7 +3,7 @@ import { EnumAnalyticEvent } from 'constants/anlytics.constant';
 import { HIT_SLOP_EXPAND_20 } from 'constants/system.constant';
 import { logEventAnalytics, mhs, useSystem, verticalScale } from 'helpers/system.helper';
 import AnimatedLottieView from 'lottie-react-native';
-import React, { ReactNode, forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { ReactNode, forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState, useMemo } from 'react';
 import isEqual from 'react-fast-compare';
 
 import {
@@ -97,16 +97,23 @@ function AlertViewComponent(props: AlertViewProps, ref: React.Ref<TypedAlert>) {
     const [alertContent, setAlertContent] = useState<any>()
     const _mounted = useRef(false);
     const { theme } = useSystem();
+    const [firstLoad, setFirstLoad] = useState<boolean>(false);
     const refNativeAds = useRef<any>()
     const bottomSheetRef = useRef<BottomSheet>(null);
     const dispatch = useAppDispatch();
     const [startup, setStartup] = useState(false)
 
     useEffect(() => {
+        setTimeout(() => {
+            setFirstLoad(true);
+        }, 500)
+    }, [])
+
+    useEffect(() => {
         if (startup) {
             setTimeout(() => {
                 bottomSheetRef.current?.close()
-            }, 1000);
+            }, 500);
         }
     }, [startup])
 
@@ -153,6 +160,8 @@ function AlertViewComponent(props: AlertViewProps, ref: React.Ref<TypedAlert>) {
         }
     }), [alertContent]);
 
+    const snapPoints = useMemo(() => [0.001, Device.heightSafeWithStatus], []);
+
     const onDismissModal = useCallback(() => {
         bottomSheetRef.current?.close({ duration: 500 })
     }, []);
@@ -168,17 +177,21 @@ function AlertViewComponent(props: AlertViewProps, ref: React.Ref<TypedAlert>) {
         return null
     }
 
+    if (!firstLoad){
+        return null
+    }
+
     return (
         <BottomSheet
             ref={bottomSheetRef}
-            snapPoints={[1, "100%"]}
+            snapPoints={snapPoints}
             enablePanDownToClose={false}
             enableHandlePanningGesture={false}
             enableContentPanningGesture={false}
             onClose={onDismissModalDone}
             animateOnMount={false}
             handleComponent={null}
-            style={{ flex: 1 }}
+            // style={{ flex: 1 }}
             backgroundStyle={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}
         >
             <View pointerEvents='box-none' style={[styles.container]}>

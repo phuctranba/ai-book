@@ -25,7 +25,8 @@ export const usePurchase = (isFocus) => {
     } =
         useIAP();
     const dispatch = useAppDispatch()
-    const {listPlan, account} = useAppSelector(state => state.user)
+    const account = useAppSelector(state => state.user.account)
+    const listPlan = useAppSelector(state => state.user.listPlan)
     const sendSuccess = useRef(false)
     const sendFail = useRef(false)
     const typeBuy = useRef<"subscription" | "product" | "">("")
@@ -234,7 +235,7 @@ export const usePurchase = (isFocus) => {
 export const usePremium = () => {
     const {availablePurchases, getAvailablePurchases} = useIAP();
     const [isPremium, setIsPremium] = useState(false)
-    const {subscriptionIds} = useAppSelector(state => state.system)
+    const subscriptionIds = useAppSelector(state => state.system.subscriptionIds)
 
     useEffect(() => {
         const getListSubscription = async () => {

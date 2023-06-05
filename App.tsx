@@ -17,7 +17,6 @@ import {PersistGate} from "redux-persist/integration/react";
 import SpInAppUpdates, {IAUUpdateKind, StartUpdateOptions} from 'sp-react-native-in-app-updates';
 import OpenAppAds from 'components/OpenAppAds/open.app.ads';
 import AlertViewAds from 'components/Alert/AlertViewAds';
-import LoadingOpenApp from 'components/LoadingOpenApp';
 import {withIAPContext} from 'react-native-iap';
 
 const store = getStore();
@@ -47,7 +46,7 @@ const App = () => {
                         // country: 'it', // 👈🏻 the country code for the specific version to lookup for (optional)
                     },
                     android: {
-                        updateType: IAUUpdateKind.IMMEDIATE,
+                        updateType: IAUUpdateKind.FLEXIBLE,
                     },
                 }) as StartUpdateOptions;
                 inAppUpdates.startUpdate(updateOptions); // https://github.com/SudoPlz/sp-react-native-in-app-updates/blob/master/src/types.ts#L78
@@ -70,7 +69,7 @@ const App = () => {
                         <AdsReward ref={GlobalPopupHelper.adsRewardRef}/>
                         <WrapActionSheetView ref={GlobalPopupHelper.actionSheetRef}/>
                         <OpenAppAds ref={GlobalPopupHelper.admobGlobalRef}/>
-                        <LoadingOpenApp ref={GlobalPopupHelper.modalLoadingRef}/>
+                        {/*<LoadingOpenApp ref={GlobalPopupHelper.modalLoadingRef}/>*/}
                     </PersistGate>
                 </Provider>
             </SafeAreaProvider>

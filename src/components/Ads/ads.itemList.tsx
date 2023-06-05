@@ -16,7 +16,7 @@ import NativeAdView, {
     TaglineView
 } from "react-native-admob-native-ads";
 import FastImage from "react-native-fast-image";
-import { setFirstInstall, switchAdsId } from "store/reducer/system.reducer.store";
+import {setFirstInstall, setStateToImpression, switchAdsId} from "store/reducer/system.reducer.store";
 import { FontSizes, MHS, VS } from "ui/sizes.ui";
 import { RootColor } from "ui/theme";
 
@@ -93,7 +93,7 @@ export default function AdsItemList() {
     const onAdLoaded = useCallback(() => {
         logEventAnalytics(EnumAnalyticEvent.NativeAdsLoaded + "itemList");
         console.log(EnumAnalyticEvent.NativeAdsLoaded + "itemList");
-        setTimeout(() => dispatch(setFirstInstall({})), 500);
+        setTimeout(() => dispatch(setStateToImpression({})), 500);
     }, []);
 
     //////////////

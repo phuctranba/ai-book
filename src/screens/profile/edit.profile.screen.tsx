@@ -24,7 +24,7 @@ import RowEditProfileComponent from './components/row.edit.profile';
 
 const EditProfileScreen = () => {
   const { styles, theme } = useSystem(createStyles)
-  const { account } = useAppSelector(state => state.user)
+  const account  = useAppSelector(state => state.user.account)
   const dispatch = useAppDispatch()
   const [open, setOpen] = useState(false)
 
