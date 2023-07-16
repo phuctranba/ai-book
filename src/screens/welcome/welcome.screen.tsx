@@ -1,11 +1,11 @@
 import React, {memo, useCallback, useEffect, useRef, useState} from "react";
 
 import TextBase from "components/TextBase";
-import {useAppDispatch} from "configs/store.config";
+import {useAppDispatch, useAppSelector} from "configs/store.config";
 import {EnumAnalyticEvent} from "constants/anlytics.constant";
 import {GlobalPopupHelper} from "helpers/index";
 import navigationHelper from "helpers/navigation.helper";
-import {logEventAnalytics, useDisplayAds, useSystem} from "helpers/system.helper";
+import {logEventAnalytics, useNativeAds, useSystem} from "helpers/system.helper";
 import isEqual from "react-fast-compare";
 import {Image, Linking, Pressable, StatusBar, StyleSheet, View} from "react-native";
 import NativeAdView, {
@@ -19,7 +19,7 @@ import NativeAdView, {
 } from "react-native-admob-native-ads";
 import FastImage from "react-native-fast-image";
 import Animated, {useAnimatedScrollHandler, useSharedValue, withSpring} from "react-native-reanimated";
-import {setShouldShowWelcome, switchAdsId} from "store/reducer/system.reducer.store";
+import {setShouldShowWelcome} from "store/reducer/system.reducer.store";
 import {Device} from "ui/device.ui";
 import {FontSizes, HS, MHS, VS} from "ui/sizes.ui";
 import {SystemTheme} from "ui/theme";
@@ -50,6 +50,7 @@ const WelcomeScreen = () => {
     const indexRef = useRef(1);
     const dispatch = useAppDispatch();
     const [clicked, setClicked] = useState(false)
+    const isPremium = useAppSelector(state => state.system.isPremium);
 
     // function
     const scrollHandler = useAnimatedScrollHandler({
@@ -85,7 +86,7 @@ const WelcomeScreen = () => {
     const renderWelcome = useCallback((image, title, des, index) => {
         const nativeAdViewRef = useRef<any>();
         const refShouldReLoadAds = useRef<boolean>(true);
-        const {nativeAdsId, use_native_ads} = useDisplayAds();
+        const { nativeAdsId, use_native_ads, switchAdsId } = useNativeAds();
         const [dataAds, setDataAds] = useState<any>();
         const refDataAdsEcosystem = useRef(randomAppAds())
 
@@ -109,7 +110,7 @@ const WelcomeScreen = () => {
                 });
                 console.log(EnumAnalyticEvent.NativeAdsFailedToLoad + "welcome");
                 console.log("Call switchAdsId welcome");
-                dispatch(switchAdsId("native"));
+                switchAdsId();
                 refShouldReLoadAds.current = true;
             }
         }, []);
@@ -165,7 +166,7 @@ const WelcomeScreen = () => {
                     style={{paddingHorizontal: HS._12}}>
                     <View style={{flexDirection: "row", marginBottom: VS._8, width: "100%"}}>
                         <FastImage
-                            source={refDataAdsEcosystem.current.logo}
+                            source={typeof refDataAdsEcosystem.current.logo === 'number' ? refDataAdsEcosystem.current.logo : {uri: refDataAdsEcosystem.current.logo}}
                             style={{
                                 width: 40,
                                 height: 40
@@ -182,7 +183,7 @@ const WelcomeScreen = () => {
 
                     <View style={{width: "100%", flexDirection: "row", justifyContent: "space-between"}}>
                         <FastImage
-                            source={refDataAdsEcosystem.current.image[0]}
+                            source={typeof refDataAdsEcosystem.current.image[0] === 'number' ? refDataAdsEcosystem.current.image[0]: {uri:refDataAdsEcosystem.current.image[0]}}
                             style={{
                                 width: "32.5%",
                                 height: Device.height / 3
@@ -190,7 +191,7 @@ const WelcomeScreen = () => {
                             resizeMode={"cover"}
                         />
                         <FastImage
-                            source={refDataAdsEcosystem.current.image[1]}
+                            source={typeof refDataAdsEcosystem.current.image[1] === 'number' ? refDataAdsEcosystem.current.image[1]: {uri:refDataAdsEcosystem.current.image[1]}}
                             style={{
                                 width: "32.5%",
                                 height: Device.height / 3
@@ -198,7 +199,7 @@ const WelcomeScreen = () => {
                             resizeMode={"cover"}
                         />
                         <FastImage
-                            source={refDataAdsEcosystem.current.image[2]}
+                            source={typeof refDataAdsEcosystem.current.image[1] === 'number' ? refDataAdsEcosystem.current.image[2]: {uri:refDataAdsEcosystem.current.image[2]}}
                             style={{
                                 width: "32.5%",
                                 height: Device.height / 3
@@ -255,7 +256,7 @@ const WelcomeScreen = () => {
                 }
 
                 {
-                    (index === 2) ?
+                    (index === 2 && !isPremium) ?
                         ((!clicked && nativeAdsId) ?
                                 <NativeAdView
                                     // style={styles.buttonContinueContainer}

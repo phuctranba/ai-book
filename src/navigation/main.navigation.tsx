@@ -15,7 +15,11 @@ import {
     NAVIGATION_SETTING_FONT_SIZE,
     NAVIGATION_SETTING_SPEED,
     NAVIGATION_SETTING_FONT,
-    NAVIGATION_SETTINGS_THEME, NAVIGATION_PREMIUM_SERVICE_SCREEN, NAVIGATION_PREMIUM_SUCCESS_SCREEN, NAVIGATION_WELCOME
+    NAVIGATION_SETTINGS_THEME,
+    NAVIGATION_PREMIUM_SERVICE_SCREEN,
+    NAVIGATION_PREMIUM_SUCCESS_SCREEN,
+    NAVIGATION_WELCOME,
+    NAVIGATION_ECOSYSTEM_SCREEN
 } from 'constants/router.constant';
 import {useDisplayAds, useSystem} from 'helpers/system.helper';
 import {languages} from 'languages';
@@ -42,6 +46,7 @@ import PremiumServiceScreen from "screens/premium/premium.service.screen";
 import PremiumSuccessScreen from "screens/premiumSuccess/premiumSuccess.screen";
 import navigationHelper from "helpers/navigation.helper";
 import WelcomeScreen from "screens/welcome/welcome.screen";
+import EcosystemScreen from "screens/ecosystem/ecosystem.screen";
 
 
 const Drawer = createDrawerNavigator();
@@ -149,6 +154,13 @@ const MainNavigator = () => {
                 component={DrawerNavigator}
                 options={() => ({
                     headerShown: false,
+                })}
+            />
+            <MainStack.Screen
+                name={NAVIGATION_ECOSYSTEM_SCREEN}
+                component={EcosystemScreen}
+                options={() => ({
+                    // headerShown: false,
                 })}
             />
             <MainStack.Screen

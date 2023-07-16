@@ -32,6 +32,7 @@ export enum EnumAnalyticEvent {
   NativeAdsLeftApplication = "native_left_application_",
   NativeAdsClicked = "native_clicked_",
   NativeAdsClosed = "native_closed_",
+  onNativeCallLoaded = "on_native_call_loaded_",
   NativeAdsLoaded = "native_loaded_",
   onNativeAdsLoaded = "on_native_loaded_",
   NativeAdsFailedToLoad = "native_failed_to_load_",

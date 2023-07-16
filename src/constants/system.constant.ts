@@ -13,7 +13,7 @@ export const ID_ECOSYSTEM = "com.iceo.aichat";
 export const ID_APP = "ai_book_"
 export const STORE_LINK = Device.isAndroid ? "https://play.google.com/store/apps/details?id=com.zipenter.aibook" : "https://play.google.com/store/apps/details?id=com.zipenter.aibook"
 
-export const DATA_ECOSYSTEM_ADS = [
+export let DATA_ECOSYSTEM_ADS = [
     {
         name:"ai_insurance",
         link:Platform.select({
@@ -60,6 +60,10 @@ export const DATA_ECOSYSTEM_ADS = [
         ]
     },
 ]
+
+export function updateDataEcosystemAdmob(data:any[]){
+    DATA_ECOSYSTEM_ADS = data
+}
 
 export function randomAppAds(){
     return DATA_ECOSYSTEM_ADS[Math.floor(Math.random()*DATA_ECOSYSTEM_ADS.length)]

@@ -142,12 +142,11 @@ function ChooseCountry() {
 
             {(native_ads_country && nativeAdsId) && (
                 <AdsNativeCountry
-                    onAdClicked={() => {
+                    onAdClickedAdmob={() => {
                         logEventAnalytics(EnumAnalyticEvent.PressAdsCountry);
                     }}
                     ref={nativeAdViewRef}
-                    onAdLoadFailedProps={onAddLoadFailed}
-                />
+                    onAdLoadFailedProps={onAddLoadFailed} onNativeAdDone={undefined}                />
             )}
         </View>
     );

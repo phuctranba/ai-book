@@ -18,6 +18,7 @@ import SpInAppUpdates, {IAUUpdateKind, StartUpdateOptions} from 'sp-react-native
 import OpenAppAds from 'components/OpenAppAds/open.app.ads';
 import AlertViewAds from 'components/Alert/AlertViewAds';
 import {withIAPContext} from 'react-native-iap';
+import DisconectNetworkScreen from "navigation/disconect.network.screen";
 
 const store = getStore();
 
@@ -69,7 +70,7 @@ const App = () => {
                         <AdsReward ref={GlobalPopupHelper.adsRewardRef}/>
                         <WrapActionSheetView ref={GlobalPopupHelper.actionSheetRef}/>
                         <OpenAppAds ref={GlobalPopupHelper.admobGlobalRef}/>
-                        {/*<LoadingOpenApp ref={GlobalPopupHelper.modalLoadingRef}/>*/}
+                        <DisconectNetworkScreen/>
                     </PersistGate>
                 </Provider>
             </SafeAreaProvider>

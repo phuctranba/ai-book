@@ -89,12 +89,12 @@ const HistoryScreen = () => {
     const LoadingView = useMemo(() => {
         return (
             <FlatList
-                data={[1,2,3,4]}
+                data={[1, 2, 3, 4]}
                 horizontal
                 contentContainerStyle={styles.contentContainerStyle}
                 showsHorizontalScrollIndicator={false}
-                keyExtractor={(item) => item+""}
-                renderItem={()=><SuggestBookItemSkeleton/>}
+                keyExtractor={(item) => item + ""}
+                renderItem={() => <SuggestBookItemSkeleton/>}
             />
         )
     }, [])
@@ -107,19 +107,19 @@ const HistoryScreen = () => {
                           fontWeight={'900'}
                           color={RootColor.MainColor}
                           fontSize={FontSizes._16}/>
-                {dataSuggestBook.length===0?
+                {dataSuggestBook.length === 0 ?
                     <>
                         {LoadingView}
                     </>
                     :
                     <FlatList
-                    data={dataSuggestBook}
-                    horizontal
-                    contentContainerStyle={styles.contentContainerStyle}
-                    showsHorizontalScrollIndicator={false}
-                    keyExtractor={(item: TypedBook) => item.etag || ""}
-                    renderItem={renderItemSuggest}
-                />}
+                        data={dataSuggestBook}
+                        horizontal
+                        contentContainerStyle={styles.contentContainerStyle}
+                        showsHorizontalScrollIndicator={false}
+                        keyExtractor={(item: TypedBook) => item.etag || ""}
+                        renderItem={renderItemSuggest}
+                    />}
             </View>
         )
     }, [dataSuggestBook])
@@ -159,6 +159,7 @@ const HistoryScreen = () => {
 
             }
 
+
             <SearchResultModalHistory ref={refSearchResultModalHistory}
                                       closeSearch={closeSearch}
                                       onBlur={onBlur}
@@ -179,12 +180,12 @@ const createStyles = (theme: SystemTheme) => {
         },
         emptyLottie: {
             width: '50%',
-            alignSelf:'center',
+            alignSelf: 'center',
         },
         contentContainerStyle: {
             paddingHorizontal: HS._8,
             marginBottom: VS._6,
-            width:Device.width
+            width: Device.width
         },
         buttonView: {
             marginBottom: Device.paddingBottom * 1.5,
@@ -213,7 +214,7 @@ const createStyles = (theme: SystemTheme) => {
         containerEmpty: {
             justifyContent: "center",
             // alignItems: 'center',
-            width:'100%'
+            width: '100%'
         },
         viewInput: {
             flexDirection: 'row',

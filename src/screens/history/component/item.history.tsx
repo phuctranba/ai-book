@@ -28,11 +28,16 @@ const ItemHistory = ({item, index}: { item: TypedBookSummary, index: number }) =
 
 
     const renderAds = () => {
-        if (refIsPremium.current || !native_ads_list || !use_native_ads || (index != 0 && index != 2)) {
-            return <View style={{backgroundColor:theme.btnActive, height:1, width:'90%', alignSelf:'center'}}/>
+        // if (refIsPremium.current || !native_ads_list || !use_native_ads || (index != 0 && index != 2)) {
+        //     return <View style={{backgroundColor: theme.btnActive, height: 1, width: '90%', alignSelf: 'center'}}/>
+        // }
+
+        if ((index % 4 === 0) && !refIsPremium.current && native_ads_list && use_native_ads) {
+            return <AdsItemList showNativeAdmob={index < 1} index={index}/>
         }
 
-        return <AdsItemList/>
+        return null
+
     }
 
     const onPressItem = () => {
@@ -106,7 +111,7 @@ const createStyles = (theme: SystemTheme) => {
         item: {
             flexDirection: "row",
             paddingHorizontal: HS._16,
-            paddingVertical: VS._10,
+            paddingVertical: VS._12,
             gap: HS._8,
             alignItems: "center"
         }

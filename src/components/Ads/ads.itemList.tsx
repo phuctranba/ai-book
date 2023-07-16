@@ -3,9 +3,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import TextBase from "components/TextBase";
 import { useAppDispatch, useAppSelector } from "configs/store.config";
 import { EnumAnalyticEvent } from "constants/anlytics.constant";
-import {EnumTheme, randomAppAds} from "constants/system.constant";
+import { EnumTheme, randomAppAds } from "constants/system.constant";
 import { GlobalPopupHelper } from "helpers/index";
-import { logEventAnalytics, useDisplayAds, useSystem } from "helpers/system.helper";
+import { logEventAnalytics, useNativeAds, useSystem } from "helpers/system.helper";
 import { Linking, Pressable, View } from "react-native";
 import NativeAdView, {
     AdBadge,
@@ -16,33 +16,33 @@ import NativeAdView, {
     TaglineView
 } from "react-native-admob-native-ads";
 import FastImage from "react-native-fast-image";
-import {setFirstInstall, setStateToImpression, switchAdsId} from "store/reducer/system.reducer.store";
-import { FontSizes, MHS, VS } from "ui/sizes.ui";
+import { setStateToImpression} from "store/reducer/system.reducer.store";
+import { FontSizes, MHS, MVS, VS } from "ui/sizes.ui";
 import { RootColor } from "ui/theme";
 
-export default function AdsItemList() {
+export default function AdsItemList({ showNativeAdmob = true, index = 0 }: { showNativeAdmob?: boolean, index?: number }) {
     const { theme } = useSystem();
     const nativeAdViewRef = useRef<NativeAdView>(null);
     // const { idAds } = props
-    const { nativeAdsId, use_native_ads, native_ads_list } = useDisplayAds();
+    const { nativeAdsId, use_native_ads, switchAdsId } = useNativeAds();
     const [data, setData] = useState<NativeAd | null>(null);
     const themeText = useAppSelector(state => state.system.theme);
     const isPremium = useAppSelector(state => state.system.isPremium);
     const dispatch = useAppDispatch();
-    const refShouldReLoadAds = useRef(true);
-    const [clicked, setClicked] = useState(false)
-    const refDataAdsEcosystem = useRef(randomAppAds())
+    const [clicked, setClicked] = useState(false);
+    const refDataAdsEcosystem = useRef(randomAppAds());
 
     useEffect(() => {
-        if (nativeAdsId && refShouldReLoadAds.current && use_native_ads) {
-            refShouldReLoadAds.current = false;
-            nativeAdViewRef.current?.loadAd();
+        if (nativeAdsId && use_native_ads && showNativeAdmob) {
+            setTimeout(() => {
+                nativeAdViewRef.current?.loadAd();
+            }, index * 100);
         }
     }, [nativeAdsId, use_native_ads]);
 
     //////////////
 
-    const onAdFailedToLoad = useCallback((error) => {
+    const onAdFailedToLoad = (error) => {
         if (!(error.code == 0 && error.currencyCode == "USD")) {
             logEventAnalytics(EnumAnalyticEvent.NativeAdsFailedToLoad + "itemList", {
                 //@ts-ignore
@@ -52,10 +52,9 @@ export default function AdsItemList() {
             });
             console.log(EnumAnalyticEvent.NativeAdsFailedToLoad + "itemList");
             console.log("Call switchAdsId itemList");
-            dispatch(switchAdsId("native"));
-            refShouldReLoadAds.current = true;
+            switchAdsId();
         }
-    }, []);
+    };
 
     const onNativeAdLoaded = useCallback((data) => {
         logEventAnalytics(EnumAnalyticEvent.onNativeAdsLoaded + "itemList");
@@ -67,8 +66,8 @@ export default function AdsItemList() {
         GlobalPopupHelper.admobGlobalRef.current?.setIgnoreOneTimeAppOpenAd();
         logEventAnalytics(EnumAnalyticEvent.NativeAdsClicked + "itemList");
         console.log(EnumAnalyticEvent.NativeAdsClicked + "itemList");
-        setClicked(true)
-    }, [native_ads_list]);
+        setClicked(true);
+    }, []);
 
     const onAdImpression = useCallback(() => {
         logEventAnalytics(EnumAnalyticEvent.NativeAdsImpression + "itemList");
@@ -102,8 +101,8 @@ export default function AdsItemList() {
         return (
             <Pressable
                 onPress={() => {
+                    logEventAnalytics(EnumAnalyticEvent.EcosystemAdsClick + "_" + refDataAdsEcosystem.current.name);
                     GlobalPopupHelper.admobGlobalRef.current?.setIgnoreOneTimeAppOpenAd();
-                    logEventAnalytics(EnumAnalyticEvent.EcosystemAdsClick+"_"+refDataAdsEcosystem.current.name)
                     Linking.openURL(refDataAdsEcosystem.current.link);
                 }}
                 style={{
@@ -115,20 +114,20 @@ export default function AdsItemList() {
                     alignItems: "center"
                 }}>
                 <FastImage
-                    source={refDataAdsEcosystem.current.logo}
+                    source={typeof refDataAdsEcosystem.current.logo === 'number' ? refDataAdsEcosystem.current.logo : {uri: refDataAdsEcosystem.current.logo}}
                     style={{
-                        width: MHS._60, height: MHS._60, borderRadius: MHS._5
+                        width: MVS._60, height: MVS._60, borderRadius: MHS._5
                     }}
                     resizeMode={"contain"}
                 />
                 <View style={{ flex: 1, alignItems: "flex-start", justifyContent: "space-around", paddingHorizontal: MHS._5 }}>
                     <TextBase title={refDataAdsEcosystem.current.title} numberOfLines={2} style={{
-                        fontSize: MHS._14,
+                        fontSize: 14,
                         fontWeight: "700",
                         color: themeText == EnumTheme.Dark ? "#F3F3F3" : "#474747"
                     }} />
                     <TextBase title={refDataAdsEcosystem.current.description} numberOfLines={2}
-                              style={{ fontSize: MHS._10, color: themeText == EnumTheme.Dark ? "#F3F3F3" : "#474747" }} />
+                              style={{ fontSize: 12, color: themeText == EnumTheme.Dark ? "#F3F3F3" : "#474747" }} />
                 </View>
                 <View
                     style={{
@@ -143,7 +142,7 @@ export default function AdsItemList() {
                     }}
 
                 >
-                    <TextBase title={"Install"} numberOfLines={2} style={{ fontSize: FontSizes._12, color: theme.textLight }}
+                    <TextBase title={"Install"} numberOfLines={2} style={{ fontSize: 12, color: theme.textLight }}
                               fontWeight={"bold"} />
                 </View>
             </Pressable>
@@ -190,7 +189,7 @@ export default function AdsItemList() {
                                      textStyle={{ color: "#FFF", textAlign: "center" }} />
 
                             {data?.icon ? <IconView source={{ uri: data?.icon }}
-                                                    style={{ width: MHS._60, height: MHS._60, borderRadius: MHS._5 }} /> : null}
+                                                    style={{ width: MVS._60, height: MVS._60, borderRadius: MHS._5 }} /> : null}
                             <View style={{
                                 flex: 1,
                                 alignItems: "flex-start",
@@ -198,7 +197,7 @@ export default function AdsItemList() {
                                 paddingHorizontal: MHS._5
                             }}>
                                 {data?.headline ? <HeadlineView numberOfLines={2} style={{
-                                    fontSize: MHS._14,
+                                    fontSize: FontSizes._14,
                                     fontWeight: "700",
                                     color: themeText == EnumTheme.Dark ? "#F3F3F3" : "#474747"
                                 }} /> : null}
@@ -210,7 +209,7 @@ export default function AdsItemList() {
                                 {/*</View>*/}
                                 {data?.tagline ?
                                     <TaglineView numberOfLines={2} style={{
-                                        fontSize: MHS._10,
+                                        fontSize: FontSizes._10,
                                         color: themeText == EnumTheme.Dark ? "#F3F3F3" : "#474747"
                                     }} />
                                     : null

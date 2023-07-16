@@ -4,7 +4,7 @@ import { useAppSelector } from 'configs/store.config';
 import {EnumTheme} from 'constants/system.constant';
 import { languages } from 'languages';
 import { parsePhoneNumber } from 'libphonenumber-js';
-import { useMemo } from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import { Dimensions, ImageStyle, Linking, Platform, TextStyle, ToastAndroid, ViewStyle } from 'react-native';
 import DeviceCountry, {
   TYPE_CONFIGURATION,
@@ -138,22 +138,35 @@ export const validPhoneNumber = (phoneNumber?: string, countryCode?: string) => 
 }
 
 export const useDisplayAds = () => {
-    const config = useAppSelector(state => state.system.config)
-    const nativeAdsId = useAppSelector(state => state.system.nativeAdsId)
-    const rewardAdsId = useAppSelector(state => state.system.rewardAdsId)
-    const openAdsId = useAppSelector(state => state.system.openAdsId)
+    const config = useAppSelector(state => state.system.config);
+    const nativeAdsId = useAppSelector(state => state.system.nativeAdsId);
+    const rewardAdsId = useAppSelector(state => state.system.rewardAdsId);
+    const openAdsId = useAppSelector(state => state.system.openAdsId);
+    const bannerAdsId = useAppSelector(state => state.system.bannerAdsId);
 
-  const { native_ads_pre, native_ads_after, use_reward_ads, use_native_ads } =  config
+    const {
+        native_ads_pre,
+        native_ads_after,
+        use_reward_ads
+    } = config;
 
-    const displayAlertAds = ({ title, message, callback, notGoPremium = false, useReward = true }: { title: string, message: string, callback?: Function, notGoPremium?: boolean, useReward?: boolean }) => {
-        const alertPre = native_ads_pre && use_native_ads ? GlobalPopupHelper.alertAdsRef.current : GlobalPopupHelper.alertRef.current
-        const alertAfter = native_ads_after && use_native_ads ? GlobalPopupHelper.alertAdsRef.current : GlobalPopupHelper.alertRef.current
+
+    const displayAlertAds = ({
+                                 title,
+                                 message,
+                                 callback,
+                                 notGoPremium = false,
+                                 useReward = true,
+                                 textConfirm = ""
+                             }: { title: string, message: string, callback?: Function, notGoPremium?: boolean, useReward?: boolean, textConfirm?: string }) => {
+        const alertPre = native_ads_pre ? GlobalPopupHelper.alertAdsRef.current : GlobalPopupHelper.alertRef.current;
+        const alertAfter = native_ads_after ? GlobalPopupHelper.alertAdsRef.current : GlobalPopupHelper.alertRef.current;
 
         alertPre?.alert({
             title,
             message,
             actions: [{
-                text: languages.confirm,
+                text: textConfirm || languages.confirm,
                 active: true,
                 onPress: () => {
                     if (use_reward_ads && useReward) {
@@ -162,27 +175,70 @@ export const useDisplayAds = () => {
                                 alertAfter?.alert({
                                     title: languages.unlockPremiumFeature,
                                     message: languages.successfulAward,
-                                    onClose: () => { callback?.() }
-                                })
+                                    onClose: () => {
+                                        callback?.();
+                                    }
+                                });
                             }, 500);
-                        }, notGoPremium)
+                        }, notGoPremium);
                     } else {
-                        callback?.()
+                        callback?.();
                     }
                 }
             }]
-        })
-    }
+        });
+    };
 
-  return { displayAlertAds, nativeAdsId, rewardAdsId, openAdsId, ...config }
-}
+    return { displayAlertAds, ...config, nativeAdsId, rewardAdsId, openAdsId, bannerAdsId };
+};
+
+export const useNativeAds = () => {
+    const config = useAppSelector(state => state.system.config);
+    const listNativeAdsId = useAppSelector(state => state.system.listNativeAdsId);
+
+    const [nativeAdsId, setNativeAdsId] = useState<any>(listNativeAdsId?.[0]);
+    const refNativeAdsId = useRef<any>(listNativeAdsId?.[0]);
+
+    useEffect(() => {
+        if (refNativeAdsId.current !== listNativeAdsId?.[0]) {
+            setNativeAdsId(listNativeAdsId?.[0]);
+            refNativeAdsId.current = listNativeAdsId?.[0];
+        }
+    }, [listNativeAdsId]);
+
+
+    const switchAdsId = () => {
+        let newAdsId;
+        let indexOfCurrentKey = listNativeAdsId.indexOf(refNativeAdsId.current);
+        if (indexOfCurrentKey === -1) {
+            newAdsId = listNativeAdsId?.[0];
+        } else {
+            if (indexOfCurrentKey === listNativeAdsId.length - 1) {
+                refNativeAdsId.current = undefined;
+                setNativeAdsId(undefined);
+                return;
+            }
+
+            if (listNativeAdsId.length >= indexOfCurrentKey + 2) {
+                newAdsId = listNativeAdsId?.[indexOfCurrentKey + 1];
+            } else {
+                newAdsId = listNativeAdsId?.[0];
+            }
+        }
+
+        refNativeAdsId.current = newAdsId;
+        setNativeAdsId(newAdsId);
+    };
+
+    return { ...config, nativeAdsId, switchAdsId };
+};
 
 export const logEventAnalytics = async (event: string, dataObj = {}) => {
   try {
     if (__DEV__) {
       return;
     }
-    return await analytics().logEvent(`${event}_${DeviceInfo.getBuildNumber()}`, dataObj);
+    return await analytics().logEvent(event, dataObj);
   } catch (error) {
 
     }

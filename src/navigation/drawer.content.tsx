@@ -4,6 +4,7 @@ import {IconLock, IconRight} from 'assets/svgIcons';
 import TextBase from 'components/TextBase';
 import {useAppSelector} from 'configs/store.config';
 import {
+    NAVIGATION_ECOSYSTEM_SCREEN,
     NAVIGATION_PREMIUM_SERVICE_SCREEN,
     NAVIGATION_SETTING_FONT,
     NAVIGATION_SETTING_FONT_SIZE,
@@ -23,6 +24,7 @@ import {RootColor, SystemTheme} from 'ui/theme';
 import InAppReview from "react-native-in-app-review";
 import {STORE_LINK} from "constants/system.constant";
 import {EnumAnalyticEvent} from "constants/anlytics.constant";
+import {Shadow2} from "ui/shadow.ui";
 
 const Row = ({title, value}) => {
     const {styles, theme} = useSystem(stylesRow)
@@ -228,6 +230,12 @@ const DrawerContent = ({navigation}) => {
                         </Pressable>
                     ) : null
                 }
+
+                <Pressable style={[styles.btnPremium,{backgroundColor: RootColor.MainColor, marginTop:VS._40}]} onPress={()=>navigationHelper.navigate(NAVIGATION_ECOSYSTEM_SCREEN)}>
+                    <TextBase title={"Ecosystem"} fontWeight={"bold"}
+                              color={RootColor.WhiteSmoke}
+                              fontSize={FontSizes._16}/>
+                </Pressable>
             </DrawerContentScrollView>
         </View>
 
@@ -260,7 +268,8 @@ const createStyles = (theme: SystemTheme) => {
             backgroundColor: RootColor.PremiumColor,
             marginHorizontal: HS._40,
             borderRadius: MHS._50,
-            marginVertical: VS._16
+            marginVertical: VS._16,
+            ...Shadow2
         },
         textRow: {
             flex: 1

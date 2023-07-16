@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from "react";
+import React, {useCallback, useEffect, useRef} from "react";
 
 import NetInfo from "@react-native-community/netinfo";
 import setupAxiosInterceptors from "configs/axios.config";
@@ -12,7 +12,13 @@ import {EnumTheme} from "constants/system.constant";
 import navigationHelper, {navigationRef} from "helpers/navigation.helper";
 import {languages} from "languages";
 import RNBootSplash from "react-native-bootsplash";
-import {getSystem, setLanguage, setSubscriptionIds} from "store/reducer/system.reducer.store";
+import {
+    getSystem,
+    setDataEcosystemAdmob,
+    setEcosystemConfig,
+    setLanguage,
+    setSubscriptionIds
+} from "store/reducer/system.reducer.store";
 import {Device} from "ui/device.ui";
 import {RootColor} from "ui/theme";
 import DisconnectNetworkScreen from "./disconect.network.screen";
@@ -21,6 +27,7 @@ import remoteConfig from "@react-native-firebase/remote-config";
 import {usePurchase} from "helpers/purchase.helper";
 import {PRODUCTS, SUBSCRIPTIONS, useDisplayAds} from "helpers/system.helper";
 import dayjs from "dayjs";
+import database from '@react-native-firebase/database';
 
 const {CustomModule} = NativeModules
 
@@ -47,7 +54,6 @@ function AppNavigation() {
     const theme = useAppSelector(state => state.system.theme)
     const subscriptionIds = useAppSelector(state => state.system.subscriptionIds)
     const dispatch = useAppDispatch()
-    const refIsConnectionInternet = useRef<boolean>(true);
     const fontName = useAppSelector(state => state.system.fontName)
     const isPremium = useAppSelector(state => state.system.isPremium)
     const {native_ads_country} = useDisplayAds()
@@ -62,17 +68,6 @@ function AppNavigation() {
 
     useEffect(() => {
         setNavBarComponent()
-
-        const unsubscribeNetInfo = NetInfo.addEventListener(state => {
-            if (state.isConnected !== refIsConnectionInternet.current) {
-                refIsConnectionInternet.current = state.isConnected || false;
-                if (state.isConnected) {
-                    navigationHelper.replace("NAVIGATION_MAIN", {shouldGoToTrueScreenAfterReConnect: true})
-                } else {
-                    navigationHelper.replace("NAVIGATION_DISCONNECTED_NETWORK")
-                }
-            }
-        });
 
         remoteConfig().setConfigSettings({
             minimumFetchIntervalMillis: 600000,
@@ -94,9 +89,41 @@ function AppNavigation() {
             initIAP({subscriptionIds, productIds: PRODUCTS})
         }
 
-        return (() => {
-            unsubscribeNetInfo();
-        })
+        getConfigEcosystem()
+    }, [])
+
+    const getConfigEcosystem = useCallback(async () => {
+        const credentials = {
+            clientId: '1042995885252-k4rtsrqii27ggr2r5qnjgb685s8bqo55.apps.googleusercontent.com',
+            appId: '1:1042995885252:android:5f2282084ef4966646c591',
+            apiKey: 'AIzaSyCbYt13w3uwYplZTlwUJFfw6HRH79kjBqA',
+            databaseURL: 'https://ecosystem-76077-default-rtdb.firebaseio.com/',
+            storageBucket: 'ecosystem-76077.appspot.com',
+            messagingSenderId: '1042995885252',
+            projectId: 'ecosystem-76077',
+        };
+
+        const config = {
+            name: 'ECOSYSTEM',
+        };
+
+        const secondaryApp = await firebase.initializeApp(credentials, config);
+
+
+        database(secondaryApp)
+            .ref('/ecosystem')
+            .once('value')
+            .then(snapshot => {
+                dispatch(setDataEcosystemAdmob(snapshot.val()))
+            });
+
+        database(secondaryApp)
+            .ref('/config')
+            .once('value')
+            .then(snapshot => {
+                dispatch(setEcosystemConfig(snapshot.val()))
+            });
+
     }, [])
 
     const setNavBarComponent = () => {

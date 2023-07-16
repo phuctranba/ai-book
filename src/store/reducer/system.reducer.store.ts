@@ -1,9 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {createAsyncThunk, createSlice, isFulfilled} from "@reduxjs/toolkit";
 import axios from "axios";
-import {ADS_ID, APP_URL, KEY_OPEN_ADS_MOB, KEY_REWARD_ADS_MOB} from "configs/index";
+import {APP_URL} from "configs/index";
 import {serializeAxiosError} from "configs/reducer.config";
-import {EnumTheme, ID_ECOSYSTEM} from "constants/system.constant";
+import {EnumTheme, ID_ECOSYSTEM, updateDataEcosystemAdmob} from "constants/system.constant";
 import {cleanEntity} from "helpers/object.helper";
 import {TypedEcosystem} from "models/ecosystem.model";
 import DeviceInfo from "react-native-device-info";
@@ -20,6 +20,8 @@ interface InitialState {
     language: string
     languageVoice: { code: string, name: string, longCode: string } | undefined
     subscriptionIds: string[]
+    listNativeAdsId: string[]
+    dataEcosystemAdmob: any[]
     tokenFirebase: string
     isConnectedInternet: boolean
     suggestQuestion: boolean
@@ -40,6 +42,7 @@ interface InitialState {
     nativeAdsId: string
     rewardAdsId: string
     openAdsId: string
+    bannerAdsId: string
     config: {
         native_ads_pre: boolean
         native_ads_after: boolean
@@ -48,6 +51,8 @@ interface InitialState {
         key_google_cloud: string
         key_reward_ads: string
         key_native_ads: string
+        key_banner_ads: string
+        use_banner_ads: boolean
         free_credit_of_ads: number
         key_open_ads: string
         use_native_ads: boolean
@@ -80,6 +85,8 @@ interface InitialState {
 const initialState: InitialState = {
     theme: EnumTheme.Light,
     subscriptionIds: [],
+    listNativeAdsId: [],
+    dataEcosystemAdmob: [],
     language: "en",
     languageVoice: undefined,
     tokenFirebase: "",
@@ -102,10 +109,13 @@ const initialState: InitialState = {
     nativeAdsId: "",
     rewardAdsId: "",
     openAdsId: "",
+    bannerAdsId: "",
     config: {
         native_ads_pre: true,
         native_ads_after: true,
         native_ads_country: true,
+        key_banner_ads: "",
+        use_banner_ads: false,
         chatgpt_key: "",
         key_google_cloud: "",
         key_reward_ads: "",
@@ -165,18 +175,18 @@ export const getSystem = createAsyncThunk(
     async (_, thunkApi) => {
         await remoteConfig()
             .setDefaults({
-                [`native_ads_pre_${Platform.OS}`]: true,
-                [`native_ads_after_${Platform.OS}`]: true,
-                [`native_ads_country_${Platform.OS}`]: true,
-                [`native_ads_list_${Platform.OS}`]: true,
+                [`native_ads_pre_${Platform.OS}`]: false,
+                [`native_ads_after_${Platform.OS}`]: false,
+                [`native_ads_country_${Platform.OS}`]: false,
+                [`native_ads_list_${Platform.OS}`]: false,
                 [`key_native_ads_${Platform.OS}`]: "",
                 [`key_reward_ads_${Platform.OS}`]: "",
-                [`use_reward_ads_${Platform.OS}`]: true,
+                [`key_banner_ads_${Platform.OS}`]: "",
+                [`use_banner_ads_${Platform.OS}`]: false,
+                [`use_reward_ads_${Platform.OS}`]: false,
                 [`key_open_ads_${Platform.OS}`]: "",
-                [`use_open_ads_${Platform.OS}`]: true,
-                [`use_native_ads_${Platform.OS}`]: true,
-                [`chatgpt_key`]: "",
-                [`key_google_cloud`]: "",
+                [`use_open_ads_${Platform.OS}`]: false,
+                [`use_native_ads_${Platform.OS}`]: false,
                 [`free_credit_of_ads`]: 3,
             })
             .then(() => remoteConfig().fetchAndActivate())
@@ -186,14 +196,14 @@ export const getSystem = createAsyncThunk(
         const native_ads_after = remoteConfig().getValue(`native_ads_after_${Platform.OS}`);
         const native_ads_country = remoteConfig().getValue(`native_ads_country_${Platform.OS}`);
         const native_ads_list = remoteConfig().getValue(`native_ads_list_${Platform.OS}`);
+        const key_banner_ads = remoteConfig().getValue(`key_banner_ads_${Platform.OS}`);
+        const use_banner_ads = remoteConfig().getValue(`use_banner_ads_${Platform.OS}`);
         const key_native_ads = remoteConfig().getValue(`key_native_ads_${Platform.OS}`);
         const key_reward_ads = remoteConfig().getValue(`key_reward_ads_${Platform.OS}`);
         const use_reward_ads = remoteConfig().getValue(`use_reward_ads_${Platform.OS}`);
         const key_open_ads = remoteConfig().getValue(`key_open_ads_${Platform.OS}`);
         const use_open_ads = remoteConfig().getValue(`use_open_ads_${Platform.OS}`);
         const use_native_ads = remoteConfig().getValue(`use_native_ads_${Platform.OS}`);
-        const chatgpt_key = remoteConfig().getValue(`chatgpt_key`);
-        const key_google_cloud = remoteConfig().getValue(`key_google_cloud`);
         const free_credit_of_ads = remoteConfig().getValue(`free_credit_of_ads`);
         thunkApi.dispatch(setLoadedConfig())
 
@@ -205,11 +215,11 @@ export const getSystem = createAsyncThunk(
             native_ads_list: native_ads_list.asBoolean(),
             use_reward_ads: use_reward_ads.asBoolean(),
             use_open_ads: use_open_ads.asBoolean(),
+            use_banner_ads: use_banner_ads.asBoolean(),
+            key_banner_ads: __DEV__ ? TestIds.BANNER : (key_banner_ads.asString() || ""),
             key_native_ads: __DEV__ ? TestNativeIds.Image : (key_native_ads.asString() || ""),
             key_reward_ads: __DEV__ ? TestIds.REWARDED : (key_reward_ads.asString() || ""),
             key_open_ads: __DEV__ ? TestIds.APP_OPEN : (key_open_ads.asString() || ""),
-            chatgpt_key: chatgpt_key.asString() || "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",
-            key_google_cloud: key_google_cloud.asString() || "AIzaSyBWVQcb2lWNVv4K-st0_iSxKBZxN69DOZM",
             free_credit_of_ads: Number.isInteger(free_credit_of_ads.asNumber())?free_credit_of_ads.asNumber(): 3,
         })
     },
@@ -432,6 +442,15 @@ export const System = createSlice({
                     }
                     break;
                 }
+                case "banner": {
+                    currentId = state.bannerAdsId;
+                    keyCurrentId = "bannerAdsId";
+                    listIds = state.config.key_banner_ads.split("#")
+                    newConfig = {
+                        use_banner_ads: false
+                    }
+                    break;
+                }
                 case "reward": {
                     currentId = state.rewardAdsId;
                     keyCurrentId = "rewardAdsId";
@@ -474,7 +493,27 @@ export const System = createSlice({
                 [keyCurrentId]: newCurrentNativeAdsId
             })
         },
-
+        setDataEcosystemAdmob: (state, action) => {
+            let dataFilter = (action.payload||[]).filter(item=>item?.package!==DeviceInfo.getBundleId())
+            updateDataEcosystemAdmob(dataFilter);
+            console.log(DeviceInfo.getBundleId())
+            console.log(action.payload)
+            return {
+                ...state,
+                dataEcosystemAdmob: action.payload,
+            };
+        },
+        setEcosystemConfig: (state, action) => {
+            console.log(action.payload)
+            return {
+                ...state,
+                getConfigDone: true,
+                config: {
+                    ...state.config,
+                    ...action.payload
+                },
+            };
+        },
     },
     extraReducers(builder) {
         builder
@@ -492,7 +531,12 @@ export const System = createSlice({
                     ...state,
                     getConfigDone: true,
                     freeSummaryCount: state.config.free_credit_of_ads === -1 ? action.payload.free_credit_of_ads : state.freeSummaryCount,
-                    config: action.payload,
+                    config: {
+                        ...state.config,
+                        ...action.payload
+                    },
+                    listNativeAdsId: action.payload?.key_native_ads?.split("#"),
+                    bannerAdsId: action.payload?.key_banner_ads?.split("#")?.[0],
                     nativeAdsId: action.payload?.key_native_ads?.split("#")?.[0],
                     rewardAdsId: action.payload?.key_reward_ads?.split("#")?.[0],
                     openAdsId: action.payload?.key_open_ads?.split("#")?.[0],
@@ -529,7 +573,9 @@ export const {
     setFontName,
     setUseNormalSummary,
     setStateToImpression,
-    setShouldShowWelcome
+    setShouldShowWelcome,
+    setEcosystemConfig,
+    setDataEcosystemAdmob
 } = System.actions;
 
 // Reducer

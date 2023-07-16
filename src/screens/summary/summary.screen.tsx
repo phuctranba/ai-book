@@ -38,7 +38,6 @@ import {textToSpeech} from "../../services/textToSpeech.service";
 import {sort} from "helpers/object.helper";
 import Sound from "react-native-sound";
 import isEqual from "react-fast-compare";
-import AdsItemList from "components/Ads/ads.itemList";
 import LinearGradient from 'react-native-linear-gradient';
 
 const DEFAULT_IMAGE = require('assets/images/book-default.png')
@@ -84,7 +83,6 @@ const SummaryScreen = () => {
     const refShowSpeechButton = useRef<any>(showSpeechButton)
     const refAllowSpeech = useRef<boolean>(false)
     const refTimeOutSwitch = useRef<any>()
-    const {native_ads_list, use_native_ads} = useDisplayAds()
 
     useEffect(() => {
         refShowSpeechButton.current = showSpeechButton
@@ -433,13 +431,6 @@ const SummaryScreen = () => {
         }, 5000)
     }, [isUseNormalSummary, isPremium])
 
-    const renderAds = () => {
-        if (refIsPremium.current || !native_ads_list || !use_native_ads) {
-            return null
-        }
-
-        return <AdsItemList/>
-    }
 
     return (
         <View style={{flex: 1}}>
@@ -472,8 +463,6 @@ const SummaryScreen = () => {
                         </View>}
                     </View>
                 </View>
-
-                {renderAds()}
 
                 {
                     book.volumeInfo?.description ?

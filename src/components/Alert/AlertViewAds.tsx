@@ -21,11 +21,12 @@ import { FontWeights, HS, MHS, VS } from 'ui/sizes.ui';
 
 import BottomSheet from "@gorhom/bottom-sheet";
 import { useAppDispatch } from 'configs/store.config';
-import {setFirstInstall, setStateToImpression} from 'store/reducer/system.reducer.store';
+import { setStateToImpression} from 'store/reducer/system.reducer.store';
 import TextBase from '../TextBase';
 import { OverlayProps } from '../common/Overlay';
 import AdsNativeAlertView from './component/ads.native';
 import { GlobalPopupHelper } from 'helpers/index';
+import Animated, { Extrapolate, interpolate, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 
 type AlertAction = {
     text?: string;
@@ -102,6 +103,7 @@ function AlertViewComponent(props: AlertViewProps, ref: React.Ref<TypedAlert>) {
     const bottomSheetRef = useRef<BottomSheet>(null);
     const dispatch = useAppDispatch();
     const [startup, setStartup] = useState(false)
+    const animatedIndex = useSharedValue(0)
 
     useEffect(() => {
         setTimeout(() => {
@@ -162,6 +164,12 @@ function AlertViewComponent(props: AlertViewProps, ref: React.Ref<TypedAlert>) {
 
     const snapPoints = useMemo(() => [0.001, Device.heightSafeWithStatus], []);
 
+    const styleViewAds = useAnimatedStyle(() => {
+        return {
+            opacity: interpolate(animatedIndex.value, [0, 1], [0, 1], Extrapolate.CLAMP)
+        }
+    })
+
     const onDismissModal = useCallback(() => {
         bottomSheetRef.current?.close({ duration: 500 })
     }, []);
@@ -191,10 +199,12 @@ function AlertViewComponent(props: AlertViewProps, ref: React.Ref<TypedAlert>) {
             onClose={onDismissModalDone}
             animateOnMount={false}
             handleComponent={null}
+            keyboardBehavior={'interactive'}
+            animatedIndex={animatedIndex}
             // style={{ flex: 1 }}
             backgroundStyle={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}
         >
-            <View pointerEvents='box-none' style={[styles.container]}>
+            <Animated.View pointerEvents='box-none' style={[styles.container, styleViewAds]}>
                 <View style={[styles.viewContent, { width, borderRadius, backgroundColor: theme.background }]}>
                     {
                         <View style={styles.viewContentMessage}>
@@ -202,7 +212,7 @@ function AlertViewComponent(props: AlertViewProps, ref: React.Ref<TypedAlert>) {
                                        hitSlop={HIT_SLOP_EXPAND_20} onPress={onDismissModal}>
                                 <IconClose size={MHS._20} color={theme.text} />
                             </Pressable>
-                            <TextBase title={alertContent?.title} fontSize={20} fontWeight="700" style={[styles.txtTitle]} />
+                            <TextBase title={alertContent?.title} fontSize={18} fontWeight="700" style={[styles.txtTitle]} />
                             {
                                 !alertContent?.actions?.[0] ? (
                                     <View>
@@ -255,7 +265,7 @@ function AlertViewComponent(props: AlertViewProps, ref: React.Ref<TypedAlert>) {
 
                     }
                 </View>
-            </View>
+            </Animated.View>
         </BottomSheet>
     );
 }

@@ -22,6 +22,7 @@
     "@react-native-firebase/analytics": "^17.3.1",
     "@react-native-firebase/app": "^17.3.1",
     "@react-native-firebase/crashlytics": "^17.4.2",
+    "@react-native-firebase/database": "^18.2.0",
     "@react-native-firebase/firestore": "^17.4.0",
     "@react-native-firebase/messaging": "^17.3.1",
     "@react-native-firebase/remote-config": "^17.4.3",
