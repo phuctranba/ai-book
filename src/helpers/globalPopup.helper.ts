@@ -7,7 +7,6 @@ import { ActionSheetType } from 'components/ActionSheet/ActionSheetView';
 import { TypedAdsRef } from 'components/Ads/ads.reward';
 import { TypedAlert } from 'components/Alert/AlertView';
 import { DropdownAlertType, DropdownAlertViewProps } from 'components/DropdownAlert/dropdownAlert';
-import getStore from 'configs/store.config';
 import {TypedRefAdmob} from "components/OpenAppAds/admob.app";
 // import { TypedSocket } from '../../Socket';
 // import { TypedAlert } from "components/Alert/AlertView";
@@ -21,6 +20,8 @@ export const adsRewardRef = React.createRef<TypedAdsRef>();
 export const actionSheetRef = React.createRef<ActionSheetType>();
 export const admobGlobalRef = React.createRef<TypedRefAdmob>();
 export const modalLoadingRef = React.createRef<any>();
+export const giftFirstOpenScreenRef = React.createRef<any>();
+export const statusApplicationScreenRef = React.createRef<any>();
 
 export function alert(content: DropdownAlertViewProps) {
   globalAlertRef.current?.show(content)

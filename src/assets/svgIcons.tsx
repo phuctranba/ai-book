@@ -76,6 +76,17 @@ export const IconClose = ({ size, color = "white" }) => {
   )
 };
 
+export const IconArrowLeft = ({ size, color = "white", ...props }) => {
+  const xml = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left">
+<line stroke="${color}" x1="19" y1="12" x2="5" y2="12"/>
+<polyline stroke="${color}" points="12 19 5 12 12 5"/>
+</svg>
+  `
+  return (
+      <SvgXml xml={xml} width={size} height={size} {...props} />
+  )
+}
 export const IconPlayStore = ({ size, color = "white", style = {} }) => {
   const xml = `
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Icons" x="0px" y="0px" viewBox="0 0 32 32" style="enable-background:new 0 0 32 32;" xml:space="preserve">

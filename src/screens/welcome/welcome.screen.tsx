@@ -8,7 +8,7 @@ import navigationHelper from "helpers/navigation.helper";
 import {logEventAnalytics, useNativeAds, useSystem} from "helpers/system.helper";
 import isEqual from "react-fast-compare";
 import {Image, Linking, Pressable, StatusBar, StyleSheet, View} from "react-native";
-import NativeAdView, {
+import {
     AdBadge,
     AdvertiserView,
     CallToActionView,
@@ -25,6 +25,7 @@ import {FontSizes, HS, MHS, VS} from "ui/sizes.ui";
 import {SystemTheme} from "ui/theme";
 import {randomAppAds} from "constants/system.constant";
 import AdsItemList from "components/Ads/ads.itemList";
+import NativeAdmob from "components/Ads/nativeAdmob.ads";
 
 const TOTAL_STEP = 3;
 const totalWidth = TOTAL_STEP * Device.width;
@@ -86,7 +87,7 @@ const WelcomeScreen = () => {
     const renderWelcome = useCallback((image, title, des, index) => {
         const nativeAdViewRef = useRef<any>();
         const refShouldReLoadAds = useRef<boolean>(true);
-        const { nativeAdsId, use_native_ads, switchAdsId } = useNativeAds();
+        const {nativeAdsId, use_native_ads} = useNativeAds();
         const [dataAds, setDataAds] = useState<any>();
         const refDataAdsEcosystem = useRef(randomAppAds())
 
@@ -101,56 +102,17 @@ const WelcomeScreen = () => {
         //////////////
 
         const onAdFailedToLoad = useCallback((error) => {
-            if (!(error.code == 0 && error.currencyCode == "USD")) {
-                logEventAnalytics(EnumAnalyticEvent.NativeAdsFailedToLoad + "welcome", {
-                    //@ts-ignore
-                    code: error?.code,
-                    message: error?.message,
-                    currencyCode: error?.currencyCode
-                });
-                console.log(EnumAnalyticEvent.NativeAdsFailedToLoad + "welcome");
-                console.log("Call switchAdsId welcome");
-                switchAdsId();
+            if (error && error?.currencyCode?.toUpperCase() != "USD") {
                 refShouldReLoadAds.current = true;
             }
         }, []);
 
         const onNativeAdLoaded = useCallback((data) => {
-            logEventAnalytics(EnumAnalyticEvent.onNativeAdsLoaded + "welcome");
-            console.log(EnumAnalyticEvent.onNativeAdsLoaded + "welcome");
             setDataAds(data);
         }, []);
 
         const onAdClickedCurrent = useCallback(() => {
-            GlobalPopupHelper.admobGlobalRef.current?.setIgnoreOneTimeAppOpenAd();
-            logEventAnalytics(EnumAnalyticEvent.NativeAdsClicked + "welcome");
-            console.log(EnumAnalyticEvent.NativeAdsClicked + "welcome");
             setClicked(true)
-        }, []);
-
-        const onAdImpression = useCallback(() => {
-            logEventAnalytics(EnumAnalyticEvent.NativeAdsImpression + "welcome");
-            console.log(EnumAnalyticEvent.NativeAdsImpression + "welcome");
-        }, []);
-
-        const onAdOpened = useCallback(() => {
-            logEventAnalytics(EnumAnalyticEvent.NativeAdsOpened + "welcome");
-            console.log(EnumAnalyticEvent.NativeAdsOpened + "welcome");
-        }, []);
-
-        const onAdLeftApplication = useCallback(() => {
-            logEventAnalytics(EnumAnalyticEvent.NativeAdsLeftApplication + "welcome");
-            console.log(EnumAnalyticEvent.NativeAdsLeftApplication + "welcome");
-        }, []);
-
-        const onAdClosed = useCallback(() => {
-            logEventAnalytics(EnumAnalyticEvent.NativeAdsClosed + "welcome");
-            console.log(EnumAnalyticEvent.NativeAdsClosed + "welcome");
-        }, []);
-
-        const onAdLoaded = useCallback(() => {
-            logEventAnalytics(EnumAnalyticEvent.NativeAdsLoaded + "welcome");
-            console.log(EnumAnalyticEvent.NativeAdsLoaded + "welcome");
         }, []);
 
         //////////////
@@ -183,7 +145,7 @@ const WelcomeScreen = () => {
 
                     <View style={{width: "100%", flexDirection: "row", justifyContent: "space-between"}}>
                         <FastImage
-                            source={typeof refDataAdsEcosystem.current.image[0] === 'number' ? refDataAdsEcosystem.current.image[0]: {uri:refDataAdsEcosystem.current.image[0]}}
+                            source={typeof refDataAdsEcosystem.current.image[0] === 'number' ? refDataAdsEcosystem.current.image[0] : {uri: refDataAdsEcosystem.current.image[0]}}
                             style={{
                                 width: "32.5%",
                                 height: Device.height / 3
@@ -191,7 +153,7 @@ const WelcomeScreen = () => {
                             resizeMode={"cover"}
                         />
                         <FastImage
-                            source={typeof refDataAdsEcosystem.current.image[1] === 'number' ? refDataAdsEcosystem.current.image[1]: {uri:refDataAdsEcosystem.current.image[1]}}
+                            source={typeof refDataAdsEcosystem.current.image[1] === 'number' ? refDataAdsEcosystem.current.image[1] : {uri: refDataAdsEcosystem.current.image[1]}}
                             style={{
                                 width: "32.5%",
                                 height: Device.height / 3
@@ -199,7 +161,7 @@ const WelcomeScreen = () => {
                             resizeMode={"cover"}
                         />
                         <FastImage
-                            source={typeof refDataAdsEcosystem.current.image[1] === 'number' ? refDataAdsEcosystem.current.image[2]: {uri:refDataAdsEcosystem.current.image[2]}}
+                            source={typeof refDataAdsEcosystem.current.image[1] === 'number' ? refDataAdsEcosystem.current.image[2] : {uri: refDataAdsEcosystem.current.image[2]}}
                             style={{
                                 width: "32.5%",
                                 height: Device.height / 3
@@ -258,7 +220,8 @@ const WelcomeScreen = () => {
                 {
                     (index === 2 && !isPremium) ?
                         ((!clicked && nativeAdsId) ?
-                                <NativeAdView
+                                <NativeAdmob
+                                    nameAds={'welcome'}
                                     // style={styles.buttonContinueContainer}
                                     ref={nativeAdViewRef}
                                     adChoicesPlacement="bottomRight"
@@ -267,11 +230,6 @@ const WelcomeScreen = () => {
                                     onAdFailedToLoad={onAdFailedToLoad}
                                     onAdClicked={onAdClickedCurrent}
                                     onNativeAdLoaded={onNativeAdLoaded}
-                                    onAdImpression={onAdImpression}
-                                    onAdOpened={onAdOpened}
-                                    onAdLeftApplication={onAdLeftApplication}
-                                    onAdClosed={onAdClosed}
-                                    onAdLoaded={onAdLoaded}
                                 >
                                     {
                                         dataAds &&
@@ -317,7 +275,7 @@ const WelcomeScreen = () => {
                                             />
                                         </>
                                     }
-                                </NativeAdView>
+                                </NativeAdmob>
                                 :
                                 renderEcosystemAds()
                         )

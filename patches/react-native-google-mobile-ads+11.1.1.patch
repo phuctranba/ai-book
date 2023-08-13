@@ -1,0 +1,160 @@
+diff --git a/node_modules/react-native-google-mobile-ads/android/src/main/java/io/invertase/googlemobileads/ReactNativeGoogleMobileAdsEvent.java b/node_modules/react-native-google-mobile-ads/android/src/main/java/io/invertase/googlemobileads/ReactNativeGoogleMobileAdsEvent.java
+index ee13a29..9e64ff5 100644
+--- a/node_modules/react-native-google-mobile-ads/android/src/main/java/io/invertase/googlemobileads/ReactNativeGoogleMobileAdsEvent.java
++++ b/node_modules/react-native-google-mobile-ads/android/src/main/java/io/invertase/googlemobileads/ReactNativeGoogleMobileAdsEvent.java
+@@ -35,6 +35,8 @@ public class ReactNativeGoogleMobileAdsEvent implements NativeEvent {
+   public static final String GOOGLE_MOBILE_ADS_EVENT_CLICKED = "clicked";
+   public static final String GOOGLE_MOBILE_ADS_EVENT_CLOSED = "closed";
+   public static final String GOOGLE_MOBILE_ADS_EVENT_APP_EVENT = "app_event";
++  public static final String GOOGLE_MOBILE_ADS_EVENT_SHOW_FAIL = "show_fail";
++  public static final String GOOGLE_MOBILE_ADS_EVENT_AD_IMPRESSION = "ad_impression";
+ 
+   public static final String GOOGLE_MOBILE_ADS_EVENT_REWARDED_LOADED = "rewarded_loaded";
+   public static final String GOOGLE_MOBILE_ADS_EVENT_REWARDED_EARNED_REWARD =
+diff --git a/node_modules/react-native-google-mobile-ads/android/src/main/java/io/invertase/googlemobileads/ReactNativeGoogleMobileAdsFullScreenAdModule.kt b/node_modules/react-native-google-mobile-ads/android/src/main/java/io/invertase/googlemobileads/ReactNativeGoogleMobileAdsFullScreenAdModule.kt
+index 7f7ddb2..ea682a9 100644
+--- a/node_modules/react-native-google-mobile-ads/android/src/main/java/io/invertase/googlemobileads/ReactNativeGoogleMobileAdsFullScreenAdModule.kt
++++ b/node_modules/react-native-google-mobile-ads/android/src/main/java/io/invertase/googlemobileads/ReactNativeGoogleMobileAdsFullScreenAdModule.kt
+@@ -21,6 +21,7 @@ import android.app.Activity
+ import android.util.Log
+ import android.util.SparseArray
+ import com.facebook.react.bridge.*
++import com.google.android.gms.ads.AdError
+ import com.google.android.gms.ads.AdLoadCallback
+ import com.google.android.gms.ads.FullScreenContentCallback
+ import com.google.android.gms.ads.LoadAdError
+@@ -202,16 +203,36 @@ abstract class ReactNativeGoogleMobileAdsFullScreenAdModule<T>(
+ 
+             override fun onAdImpression() {
+               // Not Implemented Yet
++              // call when show ads success
++              sendAdEvent(ReactNativeGoogleMobileAdsEvent.GOOGLE_MOBILE_ADS_EVENT_AD_IMPRESSION)
+             }
+ 
+-            private fun sendAdEvent(type: String) {
+-              sendAdEvent(
+-                type,
+-                requestId,
+-                adUnitId,
+-                null,
+-                null
+-              )
++            override fun onAdFailedToShowFullScreenContent(adError: AdError) {
++              // Called when ad fails to show.
++              sendAdEvent(ReactNativeGoogleMobileAdsEvent.GOOGLE_MOBILE_ADS_EVENT_SHOW_FAIL, adError)
++            }
++
++            private fun sendAdEvent(type: String, err: AdError? = null ) {
++              if (type == ReactNativeGoogleMobileAdsEvent.GOOGLE_MOBILE_ADS_EVENT_SHOW_FAIL){
++                val error = Arguments.createMap()
++                error.putString("code", err?.code.toString())
++                error.putString("message", err?.message)
++                sendAdEvent(
++                  type,
++                  requestId,
++                  adUnitId,
++                  error,
++                  null
++                )
++              } else {
++                sendAdEvent(
++                  type,
++                  requestId,
++                  adUnitId,
++                  null,
++                  null
++                )
++              }
+             }
+           }
+         adHelper.setFullScreenContentCallback(fullScreenContentCallback)
+diff --git a/node_modules/react-native-google-mobile-ads/lib/typescript/AdEventType.d.ts b/node_modules/react-native-google-mobile-ads/lib/typescript/AdEventType.d.ts
+index aef4f48..0fd937b 100644
+--- a/node_modules/react-native-google-mobile-ads/lib/typescript/AdEventType.d.ts
++++ b/node_modules/react-native-google-mobile-ads/lib/typescript/AdEventType.d.ts
+@@ -39,6 +39,11 @@ export declare enum AdEventType {
+     /**
+      * The user closed the ad and has returned back to your application.
+      */
+-    CLOSED = "closed"
++    CLOSED = "closed",
++    SHOW_FAIL = 'show_fail',
++    /**
++     * method call when ad show success
++     */
++    AD_IMPRESSION = 'ad_impression',
+ }
+ //# sourceMappingURL=AdEventType.d.ts.map
+\ No newline at end of file
+diff --git a/node_modules/react-native-google-mobile-ads/lib/typescript/types/AdStates.d.ts b/node_modules/react-native-google-mobile-ads/lib/typescript/types/AdStates.d.ts
+index fbae264..af606ba 100644
+--- a/node_modules/react-native-google-mobile-ads/lib/typescript/types/AdStates.d.ts
++++ b/node_modules/react-native-google-mobile-ads/lib/typescript/types/AdStates.d.ts
+@@ -29,6 +29,9 @@ export interface AdStates {
+      * Whether the user earned the reward by Rewarded Ad.
+      */
+     isEarnedReward?: boolean;
++    showFail: boolean;
++
++    isAdImpression: boolean;
+ }
+ export interface AdHookReturns extends AdStates {
+     /**
+diff --git a/node_modules/react-native-google-mobile-ads/src/AdEventType.ts b/node_modules/react-native-google-mobile-ads/src/AdEventType.ts
+index 41e9518..5c91c8c 100644
+--- a/node_modules/react-native-google-mobile-ads/src/AdEventType.ts
++++ b/node_modules/react-native-google-mobile-ads/src/AdEventType.ts
+@@ -61,4 +61,9 @@ export enum AdEventType {
+    * The user closed the ad and has returned back to your application.
+    */
+   CLOSED = 'closed',
++  SHOW_FAIL = 'show_fail',
++  /**
++   * method call when ad show success
++   */
++  AD_IMPRESSION = 'ad_impression',
+ }
+diff --git a/node_modules/react-native-google-mobile-ads/src/hooks/useFullScreenAd.ts b/node_modules/react-native-google-mobile-ads/src/hooks/useFullScreenAd.ts
+index ccb2d82..19f12d2 100644
+--- a/node_modules/react-native-google-mobile-ads/src/hooks/useFullScreenAd.ts
++++ b/node_modules/react-native-google-mobile-ads/src/hooks/useFullScreenAd.ts
+@@ -35,6 +35,8 @@ const initialState: AdStates = {
+   error: undefined,
+   reward: undefined,
+   isEarnedReward: false,
++  showFail: false,
++  isAdImpression: false
+ };
+ 
+ export function useFullScreenAd<
+@@ -81,6 +83,12 @@ export function useFullScreenAd<
+         case AdEventType.CLICKED:
+           setState({ isClicked: true });
+           break;
++        case AdEventType.SHOW_FAIL:
++          setState({ error: payload as Error, showFail: true })
++          break;
++        case AdEventType.AD_IMPRESSION:
++          setState({ isAdImpression: true })
++          break;
+         case AdEventType.ERROR:
+           setState({ error: payload as Error });
+           break;
+diff --git a/node_modules/react-native-google-mobile-ads/src/types/AdStates.ts b/node_modules/react-native-google-mobile-ads/src/types/AdStates.ts
+index e041ede..2472b2d 100644
+--- a/node_modules/react-native-google-mobile-ads/src/types/AdStates.ts
++++ b/node_modules/react-native-google-mobile-ads/src/types/AdStates.ts
+@@ -30,6 +30,13 @@ export interface AdStates {
+    * Whether the user earned the reward by Rewarded Ad.
+    */
+   isEarnedReward?: boolean;
++
++  /**
++   * Whether the ad show fail.
++   */
++  showFail: boolean;
++
++  isAdImpression: boolean;
+ }
+ 
+ export interface AdHookReturns extends AdStates {

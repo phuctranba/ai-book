@@ -1,53 +1,83 @@
-import React, {useCallback, useLayoutEffect} from 'react';
-
+import React, {useCallback, useLayoutEffect, useState} from 'react';
+import debounce from "lodash.debounce";
 import TextBase from 'components/TextBase';
-import {useAppSelector,} from 'configs/store.config';
 import {logEventAnalytics, useSystem,} from 'helpers/system.helper';
-import {FlatList, Linking, Pressable, StyleSheet, View,} from 'react-native';
+import {FlatList, Linking, Pressable, StyleSheet, TextInput, View,} from 'react-native';
 import {FontSizes, HS, MHS, MVS, VS,} from 'ui/sizes.ui';
-import {RootColor, SystemTheme} from 'ui/theme';
+import {SystemTheme} from 'ui/theme';
 import {useNavigation} from "@react-navigation/native";
 import {DATA_ECOSYSTEM_ADS, HIT_SLOP_EXPAND_20} from "constants/system.constant";
-import {IconPlayStore} from "assets/svgIcons";
+import {IconArrowLeft, IconPlayStore, IconSearch} from "assets/svgIcons";
 import {Shadow2} from "ui/shadow.ui";
 import FastImage from "react-native-fast-image";
+import {Device} from "ui/device.ui";
+import navigationHelper from "helpers/navigation.helper";
 
 
 const EcosystemScreen = () => {
-    const {styles, theme, themeKey} = useSystem(createStyles)
-    const isPremium = useAppSelector(state => state.system.isPremium)
+    const {styles, theme} = useSystem(createStyles)
     const navigation = useNavigation()
 
-    const renderHeaderRight = useCallback(() => {
-        return (
-            <Pressable onPress={goToStore} hitSlop={HIT_SLOP_EXPAND_20} style={{paddingHorizontal: HS._20}}>
-                <IconPlayStore size={MHS._18} color={theme.text}/>
-            </Pressable>
-        )
-    }, [themeKey])
+    const [data, setData] = useState(DATA_ECOSYSTEM_ADS)
+
+    const onSearch = useCallback((text) => {
+        let valueSearch = text.trim().toLowerCase();
+        if (valueSearch.length === 0) {
+            setData(DATA_ECOSYSTEM_ADS)
+        } else {
+            setData(() => DATA_ECOSYSTEM_ADS.filter((item => item.name.toLowerCase().includes(valueSearch) || item.description.toLowerCase().includes(valueSearch))))
+        }
+    }, []);
+
+    const onSearchDebounce = debounce(onSearch, 200);
 
     const renderHeaderTitle = useCallback(() => {
         return (
-            <View style={{alignItems: "center", paddingHorizontal: HS._16}}>
-                <TextBase
-                    fontSize={FontSizes._16} fontWeight="bold"
-                    title={"Ecosystem"}/>
-                {
-                    isPremium ? (
-                        <TextBase title={"Premium - V4"} color={RootColor.PremiumColor} fontSize={FontSizes._12}
-                                  fontWeight="bold"/>
-                    ) : null
-                }
+            <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: HS._2,
+                backgroundColor: theme.background,
+                width: Device.width,
+                paddingTop: Device.heightStatusBar * 1.3,
+                paddingBottom: Device.heightStatusBar * 0.3,
+                ...Shadow2
+            }}>
+                <Pressable onPress={() => navigationHelper.goBack()} hitSlop={HIT_SLOP_EXPAND_20}
+                           style={{paddingHorizontal: HS._8}}>
+                    <IconArrowLeft color={theme.text} size={MHS._26}/>
+                </Pressable>
+                <View style={{
+                    backgroundColor: theme.backgroundTextInput,
+                    borderRadius: MHS._8,
+                    flex: 1,
+                    paddingHorizontal: HS._10,
+                    flexDirection: 'row',
+                    alignItems: 'center'
+                }}>
+                    <IconSearch color={theme.textInactive} size={FontSizes._16}/>
+                    <TextInput placeholder={"Search in Ecosystem"}
+                               onChangeText={onSearchDebounce}
+                               returnKeyType={'search'}
+                               style={{
+                                   paddingVertical: MHS._6,
+                                   marginLeft: HS._4,
+                                   marginRight: HS._8,
+                                   color: theme.text
+                               }}/>
+                </View>
+                <Pressable onPress={goToStore} hitSlop={HIT_SLOP_EXPAND_20} style={{paddingHorizontal: HS._14}}>
+                    <IconPlayStore size={FontSizes._20} color={theme.text}/>
+                </Pressable>
             </View>
         )
-    }, [isPremium, theme])
+    }, [])
 
     useLayoutEffect(() => {
         navigation.setOptions({
-            headerRight: renderHeaderRight,
-            headerTitle: renderHeaderTitle,
+            header: renderHeaderTitle,
         })
-    }, [themeKey, isPremium])
+    }, [])
 
     const renderItem = ({item}) => {
         return (
@@ -142,7 +172,7 @@ const EcosystemScreen = () => {
         <FlatList
             showsVerticalScrollIndicator={false}
             bounces={false}
-            data={DATA_ECOSYSTEM_ADS}
+            data={data}
             ListEmptyComponent={renderEmptyComponent}
             renderItem={renderItem}
             contentContainerStyle={{backgroundColor: theme.background}}

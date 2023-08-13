@@ -6,20 +6,20 @@ import {
     NAVIGATION_BLANK,
     NAVIGATION_CHOOSE_COUNTRY_SCREEM,
     NAVIGATION_DELETE_ACCOUNT,
+    NAVIGATION_ECOSYSTEM_SCREEN,
     NAVIGATION_EDIT_PROFILE,
     NAVIGATION_HISTORY,
-    NAVIGATION_SUMMARY_SCREEN,
-    NAVIGATION_SETTINGS_SCREEN,
-    NAVIGATION_SETTINGS_SYSTEM,
-    NAVIGATION_UPDATE_VOICE,
-    NAVIGATION_SETTING_FONT_SIZE,
-    NAVIGATION_SETTING_SPEED,
-    NAVIGATION_SETTING_FONT,
-    NAVIGATION_SETTINGS_THEME,
     NAVIGATION_PREMIUM_SERVICE_SCREEN,
     NAVIGATION_PREMIUM_SUCCESS_SCREEN,
-    NAVIGATION_WELCOME,
-    NAVIGATION_ECOSYSTEM_SCREEN
+    NAVIGATION_SETTING_FONT,
+    NAVIGATION_SETTING_FONT_SIZE,
+    NAVIGATION_SETTING_SPEED,
+    NAVIGATION_SETTINGS_SCREEN,
+    NAVIGATION_SETTINGS_SYSTEM,
+    NAVIGATION_SETTINGS_THEME,
+    NAVIGATION_SUMMARY_SCREEN,
+    NAVIGATION_UPDATE_VOICE,
+    NAVIGATION_WELCOME
 } from 'constants/router.constant';
 import {useDisplayAds, useSystem} from 'helpers/system.helper';
 import {languages} from 'languages';
@@ -35,7 +35,6 @@ import {Device} from 'ui/device.ui';
 import DrawerContent from './drawer.content';
 import HistoryScreen from 'screens/history/history.screen';
 import {RouteProp, useRoute} from "@react-navigation/native";
-import dayjs from "dayjs";
 import {GlobalPopupHelper} from "helpers/index";
 import {useAppSelector} from "configs/store.config";
 import SettingsFontSizeScreen from "screens/settingFontSize/settingsFontSize.screen";
@@ -56,7 +55,7 @@ const DrawerNavigator = () => {
 
     return (
         <Drawer.Navigator
-            initialRouteName="StackNavigator"
+            initialRouteName={NAVIGATION_HISTORY}
             screenOptions={{
                 swipeEnabled: false,
                 drawerStyle: {
@@ -101,10 +100,10 @@ const MainNavigator = () => {
     const route = useRoute<RouteProp<{ item: { shouldGoToTrueScreenAfterReConnect: boolean } }>>()
     const shouldGoToTrueScreenAfterReConnect = route.params?.shouldGoToTrueScreenAfterReConnect
     const {native_ads_country} = useDisplayAds()
-    const lastChoiceCountry = useAppSelector(state => state.system.lastChoiceCountry)
     const fontName = useAppSelector(state => state.system.fontName)
     const isPremium = useAppSelector(state => state.system.isPremium)
     const shouldShowWelcome = useAppSelector(state => state.system.shouldShowWelcome);
+    const chooseCountry = useAppSelector(state => state.system.firstInstall.chooseCountry);
 
     useEffect(() => {
         if (shouldGoToTrueScreenAfterReConnect) {
@@ -115,12 +114,12 @@ const MainNavigator = () => {
     const navigate = () => {
         console.log("navigate =======================");
 
-        if(isPremium){
+        if (isPremium) {
             navigationHelper.replace("DrawerNavigator")
             return;
         }
 
-        if (native_ads_country && (lastChoiceCountry === undefined || dayjs().diff(dayjs(lastChoiceCountry), "minutes") > 4320)) {
+        if (native_ads_country && !chooseCountry) {
             GlobalPopupHelper.admobGlobalRef.current?.showOpenAds(NAVIGATION_CHOOSE_COUNTRY_SCREEM)
             return;
         }
@@ -130,15 +129,15 @@ const MainNavigator = () => {
 
     return (
         <MainStack.Navigator
-            initialRouteName={isPremium ? "DrawerNavigator" : ((native_ads_country && (lastChoiceCountry === undefined || dayjs().diff(dayjs(lastChoiceCountry), "minutes") > 4320)) ? NAVIGATION_CHOOSE_COUNTRY_SCREEM : (shouldShowWelcome ? NAVIGATION_WELCOME : NAVIGATION_PREMIUM_SERVICE_SCREEN))}
+            initialRouteName={isPremium ? "DrawerNavigator" : ((native_ads_country && !chooseCountry) ? NAVIGATION_CHOOSE_COUNTRY_SCREEM : (shouldShowWelcome ? NAVIGATION_WELCOME : NAVIGATION_PREMIUM_SERVICE_SCREEN))}
             screenOptions={{
                 headerStyle: {
                     borderBottomWidth: StyleSheet.hairlineWidth,
                     borderBottomColor: theme.btnLightSmoke,
                     backgroundColor: theme.background,
                 },
-                headerTitleStyle:{
-                    fontFamily:fontName+"-Medium"
+                headerTitleStyle: {
+                    fontFamily: fontName + "-Medium"
                 },
                 headerTitleAlign: "center",
                 headerTintColor: theme.text,

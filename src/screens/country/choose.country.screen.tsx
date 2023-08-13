@@ -11,13 +11,13 @@ import navigationHelper from 'helpers/navigation.helper';
 import {logEventAnalytics, useDisplayAds, useSystem,} from 'helpers/system.helper';
 import {FlatList, Pressable, StyleSheet, TouchableOpacity, View} from "react-native";
 import Animated, {useAnimatedStyle, useSharedValue, withTiming,} from 'react-native-reanimated';
-import {setLastChoiceCountry,} from 'store/reducer/system.reducer.store';
 import {FontSizes, HS, MHS, VS} from "ui/sizes.ui";
 import DeviceCountry from "react-native-device-country";
 import {useNavigation} from '@react-navigation/native';
 
 import AdsNativeCountry from './component/ads.native.country';
 import RNBootSplash from "react-native-bootsplash";
+import {setFirstInstall} from "store/reducer/system.reducer.store";
 
 const Item = ({item, selected, index, setNameCountry}: any) => {
     const {theme} = useSystem();
@@ -103,7 +103,7 @@ function ChooseCountry() {
         return (
             <TouchableOpacity
                 onPress={() => {
-                    dispatch(setLastChoiceCountry());
+                    dispatch(setFirstInstall({ chooseCountry: true }));
                     if(shouldShowWelcome){
                         navigationHelper.replace(NAVIGATION_WELCOME);
                     }else {

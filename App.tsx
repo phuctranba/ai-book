@@ -19,13 +19,17 @@ import OpenAppAds from 'components/OpenAppAds/open.app.ads';
 import AlertViewAds from 'components/Alert/AlertViewAds';
 import {withIAPContext} from 'react-native-iap';
 import DisconectNetworkScreen from "navigation/disconect.network.screen";
+import GiftFirstOpenScreen from "navigation/giftFirstOpen.screen";
+import StatusApplicationScreen from "navigation/statusApplication.screen";
 
 const store = getStore();
 
 const App = () => {
     useEffect(() => {
         createDB().catch((error) => console.log(error, "7nc94nc348"));
-        checkUpdateFromStore()
+        setTimeout(()=>{
+            checkUpdateFromStore();
+        },2000)
     }, [])
 
     const checkUpdateFromStore = () => {
@@ -50,6 +54,7 @@ const App = () => {
                         updateType: IAUUpdateKind.FLEXIBLE,
                     },
                 }) as StartUpdateOptions;
+                GlobalPopupHelper.admobGlobalRef.current?.setIgnoreOneTimeAppOpenAd();
                 inAppUpdates.startUpdate(updateOptions); // https://github.com/SudoPlz/sp-react-native-in-app-updates/blob/master/src/types.ts#L78
             }
         }).catch((error) => {
@@ -70,7 +75,9 @@ const App = () => {
                         <AdsReward ref={GlobalPopupHelper.adsRewardRef}/>
                         <WrapActionSheetView ref={GlobalPopupHelper.actionSheetRef}/>
                         <OpenAppAds ref={GlobalPopupHelper.admobGlobalRef}/>
+                        <GiftFirstOpenScreen ref={GlobalPopupHelper.giftFirstOpenScreenRef} />
                         <DisconectNetworkScreen/>
+                        <StatusApplicationScreen ref={GlobalPopupHelper.statusApplicationScreenRef} />
                     </PersistGate>
                 </Provider>
             </SafeAreaProvider>

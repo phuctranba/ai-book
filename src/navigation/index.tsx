@@ -1,6 +1,4 @@
-import React, {useCallback, useEffect, useRef} from "react";
-
-import NetInfo from "@react-native-community/netinfo";
+import React, {useCallback, useEffect} from "react";
 import setupAxiosInterceptors from "configs/axios.config";
 import {useAppDispatch, useAppSelector} from "configs/store.config";
 import {NativeModules, StatusBar} from "react-native";
@@ -17,7 +15,8 @@ import {
     setDataEcosystemAdmob,
     setEcosystemConfig,
     setLanguage,
-    setSubscriptionIds
+    setSubscriptionIds,
+    STATUS_APPLICATION
 } from "store/reducer/system.reducer.store";
 import {Device} from "ui/device.ui";
 import {RootColor} from "ui/theme";
@@ -26,8 +25,11 @@ import MainNavigator from "./main.navigation";
 import remoteConfig from "@react-native-firebase/remote-config";
 import {usePurchase} from "helpers/purchase.helper";
 import {PRODUCTS, SUBSCRIPTIONS, useDisplayAds} from "helpers/system.helper";
-import dayjs from "dayjs";
 import database from '@react-native-firebase/database';
+import {GlobalPopupHelper} from "helpers/index";
+import SpInAppUpdates from "sp-react-native-in-app-updates";
+import {NAVIGATION_HISTORY} from "constants/router.constant";
+import DeviceInfo from "react-native-device-info";
 
 const {CustomModule} = NativeModules
 
@@ -53,11 +55,14 @@ export type RootStackList = {
 function AppNavigation() {
     const theme = useAppSelector(state => state.system.theme)
     const subscriptionIds = useAppSelector(state => state.system.subscriptionIds)
-    const dispatch = useAppDispatch()
     const fontName = useAppSelector(state => state.system.fontName)
     const isPremium = useAppSelector(state => state.system.isPremium)
     const {native_ads_country} = useDisplayAds()
-    const lastChoiceCountry = useAppSelector(state => state.system.lastChoiceCountry)
+    const chooseCountry = useAppSelector(state => state.system.firstInstall.chooseCountry);
+    const shouldShowWelcome = useAppSelector(state => state.system.shouldShowWelcome)
+    const isReceivedAWelcomeGift = useAppSelector(state => state.system.isReceivedAWelcomeGift)
+    const dispatch = useAppDispatch()
+    const status_application = useAppSelector(state => state.system.config.status_application);
 
     /**
      * Để đây cho nó Impression
@@ -90,7 +95,38 @@ function AppNavigation() {
         }
 
         getConfigEcosystem()
+
+        if (!shouldShowWelcome && !isReceivedAWelcomeGift) {
+            let intervalShowGift = setInterval(() => {
+                if (navigationHelper.getRouteName() === NAVIGATION_HISTORY) {
+                    clearInterval(intervalShowGift)
+                    setTimeout(() => {
+                        GlobalPopupHelper.giftFirstOpenScreenRef.current?.show()
+                    }, 1000)
+                }
+            }, 2000)
+        }
     }, [])
+
+    useEffect(() => {
+        if (status_application === STATUS_APPLICATION.On) {
+            GlobalPopupHelper.statusApplicationScreenRef?.current?.hide();
+        } else {
+            if (status_application === STATUS_APPLICATION.Update) {
+                const inAppUpdates = new SpInAppUpdates(false);
+                // curVersion is optional if you don't provide it will automatically take from the app using react-native-device-info
+                inAppUpdates.checkNeedsUpdate({curVersion: DeviceInfo.getVersion()}).then((result) => {
+                    if (result.shouldUpdate) {
+                        GlobalPopupHelper.statusApplicationScreenRef?.current?.show();
+                    }
+                }).catch((error) => {
+                    console.log("error checkNeedsUpdate", error);
+                });
+            } else {
+                GlobalPopupHelper.statusApplicationScreenRef?.current?.show();
+            }
+        }
+    }, [status_application]);
 
     const getConfigEcosystem = useCallback(async () => {
         const credentials = {
@@ -147,7 +183,7 @@ function AppNavigation() {
     return (
         <NavigationContainer ref={navigationRef}
                              onReady={() => {
-                                 if (isPremium || !native_ads_country || !(lastChoiceCountry === undefined || dayjs().diff(dayjs(lastChoiceCountry), "minutes") > 4320)) {
+                                 if (isPremium || !native_ads_country || chooseCountry) {
                                      RNBootSplash.hide({fade: false});
                                  }
                              }}

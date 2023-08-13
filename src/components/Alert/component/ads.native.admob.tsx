@@ -18,6 +18,7 @@ import { FontSizes, FontWeights, HS, MHS, VS } from "ui/sizes.ui";
 import { SystemTheme } from "ui/theme";
 import { randomAppAds } from "constants/system.constant";
 import { useAppSelector } from "configs/store.config";
+import NativeAdmob from "components/Ads/nativeAdmob.ads";
 
 interface Props {
     onAdClicked: () => void;
@@ -28,7 +29,7 @@ const WIDTH = Math.min(Device.width - HS._32, Device.width - 16);
 
 const AdsNativeAdmob = ({ onAdClicked, onAddImpression }: Props, ref) => {
     const { styles, theme } = useSystem(createStyles);
-    const { nativeAdsId, use_native_ads, switchAdsId } = useNativeAds();
+    const { nativeAdsId, use_native_ads } = useNativeAds();
     const nativeAdViewRef = useRef<NativeAdView>(null);
     const [dataAds, setDataAds] = useState<any>();
     const [readyToShowAds, setReadyToShowAds] = useState(!Device.isIos);
@@ -83,7 +84,6 @@ const AdsNativeAdmob = ({ onAdClicked, onAddImpression }: Props, ref) => {
 
 
     useImperativeHandle(ref, () => ({
-        onAdFailedToLoad,
         loadAd: () => {
             setDataAds(undefined);
             refIsLoaded.current = false;
@@ -97,61 +97,23 @@ const AdsNativeAdmob = ({ onAdClicked, onAddImpression }: Props, ref) => {
 
     //////////////
 
-    const onAdFailedToLoad = (error) => {
-        if (!(error.code == 0 && error.currencyCode == "USD")) {
-            logEventAnalytics(EnumAnalyticEvent.NativeAdsFailedToLoad + "alert", {
-                //@ts-ignore
-                code: error?.code,
-                message: error?.message,
-                currencyCode: error?.currencyCode
-            });
-            console.log(EnumAnalyticEvent.NativeAdsFailedToLoad + "alert");
-            console.log("Call switchAdsId alert");
-            console.log(error);
-            switchAdsId()
-        }
-    }
-
     const onNativeAdLoaded = useCallback((data) => {
-        logEventAnalytics(EnumAnalyticEvent.onNativeAdsLoaded + "alert");
-        console.log(EnumAnalyticEvent.onNativeAdsLoaded + "alert");
         setDataAds(data);
         refIsLoaded.current = true;
     }, []);
 
     const onAdClickedCurrent = useCallback(() => {
-        GlobalPopupHelper.admobGlobalRef.current?.setIgnoreOneTimeAppOpenAd();
-        logEventAnalytics(EnumAnalyticEvent.NativeAdsClicked + "alert");
-        console.log(EnumAnalyticEvent.NativeAdsClicked + "alert");
         onAdClicked?.();
         setClicked(true);
     }, [onAdClicked]);
 
     const onAdImpression = useCallback(() => {
-        logEventAnalytics(EnumAnalyticEvent.NativeAdsImpression + "alert");
-        console.log(EnumAnalyticEvent.NativeAdsImpression + "alert");
         adAlreadyImpression.current = true;
         onAddImpression?.();
     }, []);
 
-    const onAdOpened = useCallback(() => {
-        logEventAnalytics(EnumAnalyticEvent.NativeAdsOpened + "alert");
-        console.log(EnumAnalyticEvent.NativeAdsOpened + "alert");
-    }, []);
-
-    const onAdLeftApplication = useCallback(() => {
-        logEventAnalytics(EnumAnalyticEvent.NativeAdsLeftApplication + "alert");
-        console.log(EnumAnalyticEvent.NativeAdsLeftApplication + "alert");
-    }, []);
-
-    const onAdClosed = useCallback(() => {
-        logEventAnalytics(EnumAnalyticEvent.NativeAdsClosed + "alert");
-        console.log(EnumAnalyticEvent.NativeAdsClosed + "alert");
-    }, []);
 
     const onAdLoaded = useCallback(() => {
-        logEventAnalytics(EnumAnalyticEvent.NativeAdsLoaded + "alert");
-        console.log(EnumAnalyticEvent.NativeAdsLoaded + "alert");
         refDataAdsEcosystem.current = randomAppAds();
     }, []);
 
@@ -226,19 +188,16 @@ const AdsNativeAdmob = ({ onAdClicked, onAddImpression }: Props, ref) => {
     }
 
     return (
-        <NativeAdView
+        <NativeAdmob
+            nameAds={"alert"}
             style={{ width: "100%", paddingBottom: MHS._4 }}
             ref={nativeAdViewRef}
             adChoicesPlacement="bottomRight"
             adUnitID={nativeAdsId}
 
-            onAdFailedToLoad={onAdFailedToLoad}
             onAdClicked={onAdClickedCurrent}
             onNativeAdLoaded={onNativeAdLoaded}
             onAdImpression={onAdImpression}
-            onAdOpened={onAdOpened}
-            onAdLeftApplication={onAdLeftApplication}
-            onAdClosed={onAdClosed}
             onAdLoaded={onAdLoaded}
 
             videoOptions={{
@@ -270,7 +229,7 @@ const AdsNativeAdmob = ({ onAdClicked, onAddImpression }: Props, ref) => {
                     </>
                 ) : null
             }
-        </NativeAdView>
+        </NativeAdmob>
     );
 };
 

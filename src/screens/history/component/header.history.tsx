@@ -41,7 +41,7 @@ const Header = forwardRef(({
     const fontName = useAppSelector(state => state.system.fontName)
     const isPremium = useAppSelector(state => state.system.isPremium)
     const refIsPremium = useRef(isPremium)
-
+console.log(freeSummaryCount,"freeSummaryCount")
     useEffect(() => {
         refIsPremium.current = isPremium
     }, [isPremium])

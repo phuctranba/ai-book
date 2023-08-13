@@ -14,7 +14,11 @@ import {TestIds as TestNativeIds} from "react-native-admob-native-ads";
 import remoteConfig from "@react-native-firebase/remote-config";
 import {setLoadedConfig} from "store/reducer/control.reducer.store";
 
-
+export enum STATUS_APPLICATION{
+    On="on",
+    Off="off",
+    Update="update"
+}
 interface InitialState {
     theme: EnumTheme
     language: string
@@ -44,6 +48,8 @@ interface InitialState {
     openAdsId: string
     bannerAdsId: string
     config: {
+        status_application: STATUS_APPLICATION
+        native_ads_welcome: boolean
         native_ads_pre: boolean
         native_ads_after: boolean
         native_ads_country: boolean
@@ -79,7 +85,7 @@ interface InitialState {
     isPremium: boolean,
     ecosystem: TypedEcosystem[],
     freeGiftCount: number,
-    lastChoiceCountry: Date | undefined
+    isReceivedAWelcomeGift: boolean
 }
 
 const initialState: InitialState = {
@@ -111,6 +117,7 @@ const initialState: InitialState = {
     openAdsId: "",
     bannerAdsId: "",
     config: {
+        status_application: STATUS_APPLICATION.On,
         native_ads_pre: true,
         native_ads_after: true,
         native_ads_country: true,
@@ -122,6 +129,7 @@ const initialState: InitialState = {
         key_native_ads: "",
         free_credit_of_ads: -1,
         key_open_ads: "",
+        native_ads_welcome: true,
         use_reward_ads: true,
         use_open_ads: true,
         native_ads_list: true,
@@ -146,7 +154,7 @@ const initialState: InitialState = {
     isPremium: false,
     ecosystem: [],
     freeGiftCount: 2,
-    lastChoiceCountry: undefined
+    isReceivedAWelcomeGift: false
 };
 
 /**
@@ -185,6 +193,8 @@ export const getSystem = createAsyncThunk(
                 [`use_banner_ads_${Platform.OS}`]: false,
                 [`use_reward_ads_${Platform.OS}`]: false,
                 [`key_open_ads_${Platform.OS}`]: "",
+                [`native_ads_welcome_${Platform.OS}`]: false,
+                [`status_application_${Platform.OS}`]: STATUS_APPLICATION.On,
                 [`use_open_ads_${Platform.OS}`]: false,
                 [`use_native_ads_${Platform.OS}`]: false,
                 [`free_credit_of_ads`]: 3,
@@ -198,6 +208,8 @@ export const getSystem = createAsyncThunk(
         const native_ads_list = remoteConfig().getValue(`native_ads_list_${Platform.OS}`);
         const key_banner_ads = remoteConfig().getValue(`key_banner_ads_${Platform.OS}`);
         const use_banner_ads = remoteConfig().getValue(`use_banner_ads_${Platform.OS}`);
+        const native_ads_welcome = remoteConfig().getValue(`native_ads_welcome_${Platform.OS}`);
+        const status_application = remoteConfig().getValue(`status_application_${Platform.OS}`);
         const key_native_ads = remoteConfig().getValue(`key_native_ads_${Platform.OS}`);
         const key_reward_ads = remoteConfig().getValue(`key_reward_ads_${Platform.OS}`);
         const use_reward_ads = remoteConfig().getValue(`use_reward_ads_${Platform.OS}`);
@@ -208,6 +220,8 @@ export const getSystem = createAsyncThunk(
         thunkApi.dispatch(setLoadedConfig())
 
         return ({
+            status_application: status_application.asString() as STATUS_APPLICATION,
+            native_ads_welcome: native_ads_welcome.asBoolean(),
             use_native_ads: use_native_ads.asBoolean(),
             native_ads_pre: native_ads_pre.asBoolean(),
             native_ads_after: native_ads_after.asBoolean(),
@@ -261,6 +275,13 @@ export const System = createSlice({
             return {
                 ...state,
                 language: action.payload,
+            };
+        },
+        setIsReceivedAWelcomeGift: (state) => {
+            return {
+                ...state,
+                isReceivedAWelcomeGift: true,
+                freeSummaryCount: state.freeSummaryCount + 3
             };
         },
         setIsPressRate: (state, action) => {
@@ -421,9 +442,6 @@ export const System = createSlice({
                 config: action.payload
             }
         },
-        setLastChoiceCountry: (state) => {
-            state.lastChoiceCountry = new Date()
-        },
         switchAdsId: (state, action) => {
             let currentId, keyCurrentId, listIds, newConfig;
             switch (action.payload) {
@@ -569,13 +587,13 @@ export const {
     setSystem,
     switchAdsId,
     setFreeGiftCount,
-    setLastChoiceCountry,
     setFontName,
     setUseNormalSummary,
     setStateToImpression,
     setShouldShowWelcome,
     setEcosystemConfig,
-    setDataEcosystemAdmob
+    setDataEcosystemAdmob,
+    setIsReceivedAWelcomeGift
 } = System.actions;
 
 // Reducer
