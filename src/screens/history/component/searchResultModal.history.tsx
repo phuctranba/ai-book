@@ -31,6 +31,7 @@ const SearchResultModal = forwardRef(({isFocusInSearchBar, closeSearch, onBlur}:
     const {displayAlertAds, free_credit_of_ads} = useDisplayAds()
     const dispatch = useAppDispatch()
     const isPremium = useAppSelector(state => state.system.isPremium)
+    const key_google_cloud = useAppSelector(state => state.system.config?.key_google_cloud)
     const refIsPremium = useRef(isPremium)
 
     useEffect(()=>{
@@ -46,8 +47,8 @@ const SearchResultModal = forwardRef(({isFocusInSearchBar, closeSearch, onBlur}:
                 refValueSearch.current = randomKeyWord()
         }
 
-        return await searchBook({page, search: refValueSearch.current})
-    }, [])
+        return await searchBook({key: key_google_cloud, page, search: refValueSearch.current})
+    }, [key_google_cloud])
 
 
     const {

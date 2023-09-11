@@ -19,6 +19,7 @@ import ItemSuggestHistory from "screens/history/component/itemSuggest.history";
 import SuggestBookItemSkeleton from "components/skeletonComponents/suggestBook.item.skeleton";
 import {GlobalPopupHelper} from "helpers/index";
 import AdsItemList from "components/Ads/ads.itemList";
+import {useAppSelector} from "configs/store.config";
 
 const EMPTY = require("assets/lotties/empty.json")
 
@@ -27,6 +28,7 @@ const HistoryScreen = () => {
     const [isFocusInSearchBar, setIsFocusInSearchBar] = useState<boolean>(false);
     const refHeaderHistory = useRef<any>()
     const refSearchResultModalHistory = useRef<any>()
+    const key_google_cloud = useAppSelector(state => state.system.config?.key_google_cloud)
     const [data, setData] = useState<TypedBookSummary[]>([])
     const [dataSuggestBook, setDataSuggestBook] = useState<TypedBook[]>([])
 
@@ -47,10 +49,10 @@ const HistoryScreen = () => {
     useEffect(() => {
         GlobalPopupHelper.modalLoadingRef.current?.hide()
 
-        searchBook({page: 1, search: randomKeyWord(), limit: 40})
+        searchBook({page: 1, search: randomKeyWord(), limit: 40, key: key_google_cloud})
             .then(setDataSuggestBook)
             .catch(console.log)
-    }, [])
+    }, [key_google_cloud])
 
     const onSearch = useCallback((text: string) => {
         refSearchResultModalHistory.current?.search(text)

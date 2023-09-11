@@ -65,7 +65,9 @@ interface InitialState {
         use_reward_ads: boolean,
         use_open_ads: boolean,
         native_ads_list: boolean,
+        ignore_control_ads_from_eco: boolean,
     }
+    eco_config: object
     shouldShowWelcome: boolean
     isPremiumTrial: {
         overWord: string
@@ -133,8 +135,10 @@ const initialState: InitialState = {
         use_reward_ads: true,
         use_open_ads: true,
         native_ads_list: true,
-        use_native_ads: true
+        use_native_ads: true,
+        ignore_control_ads_from_eco: false,
     },
+    eco_config:{},
     shouldShowWelcome: true,
     isPremiumTrial: {
         overWord: "",
@@ -197,6 +201,7 @@ export const getSystem = createAsyncThunk(
                 [`status_application_${Platform.OS}`]: STATUS_APPLICATION.On,
                 [`use_open_ads_${Platform.OS}`]: false,
                 [`use_native_ads_${Platform.OS}`]: false,
+                [`ignore_control_ads_from_eco`]: false,
                 [`free_credit_of_ads`]: 3,
             })
             .then(() => remoteConfig().fetchAndActivate())
@@ -217,9 +222,11 @@ export const getSystem = createAsyncThunk(
         const use_open_ads = remoteConfig().getValue(`use_open_ads_${Platform.OS}`);
         const use_native_ads = remoteConfig().getValue(`use_native_ads_${Platform.OS}`);
         const free_credit_of_ads = remoteConfig().getValue(`free_credit_of_ads`);
+        const ignore_control_ads_from_eco = remoteConfig().getValue(`ignore_control_ads_from_eco`);
         thunkApi.dispatch(setLoadedConfig())
 
         return ({
+            ignore_control_ads_from_eco: ignore_control_ads_from_eco.asBoolean(),
             status_application: status_application.asString() as STATUS_APPLICATION,
             native_ads_welcome: native_ads_welcome.asBoolean(),
             use_native_ads: use_native_ads.asBoolean(),
@@ -514,22 +521,32 @@ export const System = createSlice({
         setDataEcosystemAdmob: (state, action) => {
             let dataFilter = (action.payload||[]).filter(item=>item?.package!==DeviceInfo.getBundleId())
             updateDataEcosystemAdmob(dataFilter);
-            console.log(DeviceInfo.getBundleId())
-            console.log(action.payload)
             return {
                 ...state,
                 dataEcosystemAdmob: action.payload,
             };
         },
         setEcosystemConfig: (state, action) => {
-            console.log(action.payload)
             return {
                 ...state,
                 getConfigDone: true,
                 config: {
                     ...state.config,
-                    ...action.payload
+                    ...action.payload,
+                    ...(state.config?.ignore_control_ads_from_eco?{
+                        status_application: state.config?.status_application,
+                        native_ads_pre: state.config?.native_ads_pre,
+                        native_ads_after: state.config?.native_ads_after,
+                        native_ads_country: state.config?.native_ads_country,
+                        use_banner_ads: state.config?.use_banner_ads,
+                        use_reward_ads: state.config?.use_reward_ads,
+                        use_open_ads: state.config?.use_open_ads,
+                        native_ads_list: state.config?.native_ads_list,
+                        use_native_ads: state.config?.use_native_ads,
+                        native_ads_welcome: state.config?.native_ads_welcome
+                    }:{})
                 },
+                eco_config: action.payload
             };
         },
     },
@@ -551,7 +568,8 @@ export const System = createSlice({
                     freeSummaryCount: state.config.free_credit_of_ads === -1 ? action.payload.free_credit_of_ads : state.freeSummaryCount,
                     config: {
                         ...state.config,
-                        ...action.payload
+                        ...action.payload,
+                        ...(action.payload?.ignore_control_ads_from_eco?{}:state.eco_config)
                     },
                     listNativeAdsId: action.payload?.key_native_ads?.split("#"),
                     bannerAdsId: action.payload?.key_banner_ads?.split("#")?.[0],

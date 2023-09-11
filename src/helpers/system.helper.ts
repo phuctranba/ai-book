@@ -25,6 +25,7 @@ export const SUBSCRIPTIONS = Platform.select({
     android: ["com.zipenter.aibook.subscription.month"],
     ios: ["com.zipenter.aibook.subscription.1month"]
 }) || []
+export const PRODUCTS_QUESTION = ["com.zipenter.aibook.question.1usd"]
 
 export const PRODUCTS = ["com.zipenter.aibook.donate.1usd", "com.zipenter.aibook.donate.5usd"]
 

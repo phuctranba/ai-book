@@ -24,7 +24,7 @@ import DisconnectNetworkScreen from "./disconect.network.screen";
 import MainNavigator from "./main.navigation";
 import remoteConfig from "@react-native-firebase/remote-config";
 import {usePurchase} from "helpers/purchase.helper";
-import {PRODUCTS, SUBSCRIPTIONS, useDisplayAds} from "helpers/system.helper";
+import {PRODUCTS, PRODUCTS_QUESTION, SUBSCRIPTIONS, useDisplayAds} from "helpers/system.helper";
 import database from '@react-native-firebase/database';
 import {GlobalPopupHelper} from "helpers/index";
 import SpInAppUpdates from "sp-react-native-in-app-updates";
@@ -86,9 +86,9 @@ function AppNavigation() {
 
                 dispatch(setLanguage(systemLanguage.toLowerCase().includes("vi") ? "vi" : "en"))
                 dispatch(setSubscriptionIds(SUBSCRIPTIONS))
-                initIAP({subscriptionIds: SUBSCRIPTIONS, productIds: PRODUCTS})
+                initIAP({subscriptionIds: SUBSCRIPTIONS, productIds: [...PRODUCTS,...PRODUCTS_QUESTION]})
             } catch (error) {
-                initIAP({subscriptionIds: SUBSCRIPTIONS, productIds: PRODUCTS})
+                initIAP({subscriptionIds, productIds: [...PRODUCTS,...PRODUCTS_QUESTION]})
             }
         } else {
             initIAP({subscriptionIds, productIds: PRODUCTS})

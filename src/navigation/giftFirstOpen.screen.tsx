@@ -21,6 +21,8 @@ import {setIsReceivedAWelcomeGift, setStateToImpression} from "store/reducer/sys
 import LottieView from "lottie-react-native";
 import BottomSheet, { BottomSheetModal } from "@gorhom/bottom-sheet";
 import NativeAdmob from "components/Ads/nativeAdmob.ads";
+import navigationHelper from "helpers/navigation.helper";
+import {NAVIGATION_HISTORY} from "constants/router.constant";
 
 
 const GiftFirstOpenScreen = ({}, ref) => {
@@ -50,11 +52,12 @@ const GiftFirstOpenScreen = ({}, ref) => {
 
   const onClose = useCallback(() => {
     console.log('call onClose GiftFirstOpenScreen')
-    if(refIsCallOneTime.current){
+    if(refIsCallOneTime.current || navigationHelper.getRouteName() === NAVIGATION_HISTORY){
+      refIsCallOneTime.current = true
       dispatch(setIsReceivedAWelcomeGift());
       GlobalPopupHelper.alert({
         type: "success",
-        message: "You have successfully received 3 book summaries"
+        message: "You have successfully received 3 books summaries"
       });
 
       refCb.current?.()
@@ -113,7 +116,7 @@ const GiftFirstOpenScreen = ({}, ref) => {
               <TextBase style={{ fontSize: 100, color: RootColor.PremiumColor, fontWeight: "bold" }} title={"3"} />
               <View>
                 <TextBase style={{ fontSize: 20, color: theme.textLight, fontWeight: "bold" }} title={" free"} />
-                <TextBase style={{ fontSize: 20, color: theme.textLight, fontWeight: "bold" }} title={" questions"} />
+                <TextBase style={{ fontSize: 20, color: theme.textLight, fontWeight: "bold" }} title={" books"} />
                 <TextBase style={{ fontSize: 20, color: theme.textLight, fontWeight: "bold" }}
                           title={" for new user"} />
               </View>

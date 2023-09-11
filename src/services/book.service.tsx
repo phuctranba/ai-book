@@ -14,6 +14,7 @@ export async function getEcosystem() {
 export type TypedSearchBookService = {
     page: number;
     search: string;
+    key: string;
     limit?: number;
 }
 
@@ -23,9 +24,10 @@ function removeDuplicatesBook(books:TypedBook[]) {
     })
 }
 
-export async function searchBook({page, search, limit = 20}: TypedSearchBookService): Promise<TypedBook[]> {
+export async function searchBook({page, search, key, limit = 20}: TypedSearchBookService): Promise<TypedBook[]> {
     try {
         const EndURL = encodeURI(buildEndUrl({
+            key,
             q: search,
             startIndex: (page-1) * 20,
             maxResults: limit,

@@ -5,17 +5,18 @@ import {useAppDispatch, useAppSelector} from 'configs/store.config'
 import {EnumTheme, HIT_SLOP_EXPAND_10} from 'constants/system.constant'
 import navigationHelper from 'helpers/navigation.helper'
 import {usePurchase} from 'helpers/purchase.helper'
-import {openURLWebView, PRODUCTS, SUBSCRIPTIONS, useSystem} from 'helpers/system.helper'
+import {openURLWebView, PRODUCTS, PRODUCTS_QUESTION, SUBSCRIPTIONS, useSystem} from 'helpers/system.helper'
 import {languages} from 'languages'
 import React, {useCallback, useEffect, useRef, useState} from 'react'
-import {ActivityIndicator, Pressable, StyleSheet, TouchableOpacity, View} from 'react-native'
+import {ActivityIndicator, Pressable, StyleSheet, Text, TouchableOpacity, View} from 'react-native'
 import FastImage from 'react-native-fast-image'
 import {ScrollView} from 'react-native-gesture-handler'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {setSubscriptionIds, setSubscriptionsLocal} from 'store/reducer/system.reducer.store'
 import {Device} from 'ui/device.ui'
 import {HS, MHS, VS} from 'ui/sizes.ui'
-import {SystemTheme} from 'ui/theme'
+import {RootColor, SystemTheme} from 'ui/theme'
+import {GlobalPopupHelper} from "helpers/index";
 
 const PremiumServiceScreen = () => {
     const {theme, styles, themeKey} = useSystem(createStyles)
@@ -26,7 +27,7 @@ const PremiumServiceScreen = () => {
     const subscriptionIds = useAppSelector(state => state.system.subscriptionIds)
     const subscriptionsLocal = useAppSelector(state => state.system.subscriptionsLocal)
     const isFocus = useIsFocused()
-    const {initIAP, subscriptions, buySubscription} = usePurchase(isFocus)
+    const {initIAP, subscriptions, buySubscription, buyProduct} = usePurchase(isFocus)
 
     useEffect(() => {
         if (subscriptionIds.length == 0) {
@@ -38,10 +39,10 @@ const PremiumServiceScreen = () => {
     }, [])
 
     const initStore = (ids) => {
-        initIAP({subscriptionIds: ids, productIds: PRODUCTS})
+        initIAP({subscriptionIds: ids, productIds: [...PRODUCTS,...PRODUCTS_QUESTION]})
         setTimeout(() => {
             if (initTimeout.current) {
-                initIAP({subscriptionIds: ids, productIds: PRODUCTS})
+                initIAP({subscriptionIds: ids, productIds: [...PRODUCTS,...PRODUCTS_QUESTION]})
             }
         }, 2000);
     }
@@ -79,15 +80,16 @@ const PremiumServiceScreen = () => {
 
 
     const onPressGet = useCallback(() => {
-        // GlobalPopupHelper.admobGlobalRef.current?.setIgnoreOneTimeAppOpenAd();
-        onConfirmGet()
-    }, [subscriptionsLocal])
-
-    const onConfirmGet = useCallback(() => {
-        if (subscriptionsLocal?.[0]) {
-            buySubscription(subscriptionsLocal?.[0])
+        if (subscriptions?.[0]) {
+            GlobalPopupHelper.admobGlobalRef.current?.setIgnoreOneTimeAppOpenAd();
+            buySubscription(subscriptions?.[0])
         }
-    }, [subscriptionsLocal])
+    }, [subscriptions])
+
+    const onPressBuyQuestion = useCallback(() => {
+        GlobalPopupHelper.admobGlobalRef.current?.setIgnoreOneTimeAppOpenAd();
+        buyProduct(PRODUCTS_QUESTION[0])
+    }, [subscriptions])
 
     const onPressPrivacy = useCallback(() => {
         openURLWebView(`https://lamthien8x.gitbook.io/ai-book/`)
@@ -126,8 +128,7 @@ const PremiumServiceScreen = () => {
                     <TextBase title={NAME_CHAT_GPT} fontSize={MHS._24} fontWeight="900" color={theme.backgroundMain}/>
                 </TextBase> */}
 
-                <TextBase title={languages.premiumScreen.premiumDescription} fontSize={MHS._14} textAlign={"center"}
-                          style={{marginTop: VS._10}}/>
+                <TextBase title={languages.premiumScreen.premiumDescription} fontSize={MHS._14} textAlign={"center"}/>
                 <View style={styles.contentView}>
                     {renderRow(languages.premiumScreen.noAds)}
                     {renderRow(languages.premiumScreen.unlimitedAnswer)}
@@ -140,14 +141,24 @@ const PremiumServiceScreen = () => {
                 {
                     subscriptionsLocal.map(i => renderItemPackage(i))
                 }
-                <TouchableOpacity onPress={onPressGet} style={styles.buttonGet}>
+                <TouchableOpacity onPress={onPressGet} style={[styles.buttonGet, {backgroundColor: RootColor.PremiumColor}]}>
                     {
                         loading ? (
-                            <ActivityIndicator size={"large"} color={theme.textMain}/>
+                            <ActivityIndicator size={"large"} color={theme.text}/>
                         ) : (
-                            <TextBase title={languages.premiumScreen.register}
-                                      color={themeKey == EnumTheme.Dark ? theme.textDark : theme.textLight}
-                                      fontSize={16} fontWeight="600"/>
+                            <TextBase title={languages.premiumScreen.register} color={theme.text} fontSize={16}
+                                      fontWeight="600"/>
+                        )
+                    }
+                </TouchableOpacity>
+                <Text style={{marginTop: VS._16}}>Or</Text>
+                <TouchableOpacity onPress={onPressBuyQuestion} style={styles.buttonGet}>
+                    {
+                        loading ? (
+                            <ActivityIndicator size={"large"} color={theme.text}/>
+                        ) : (
+                            <TextBase title={"Buy 3 books with 0.99$"} color={theme.text} fontSize={16}
+                                      fontWeight="600"/>
                         )
                     }
                 </TouchableOpacity>
@@ -185,7 +196,7 @@ const createStyles = (theme: SystemTheme) => {
             flexDirection: "row",
             alignItems: "center",
             paddingHorizontal: HS._16,
-            paddingVertical: VS._12,
+            paddingVertical: VS._10,
             gap: HS._10
         },
         imageHeader: {

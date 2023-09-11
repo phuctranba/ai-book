@@ -8,8 +8,8 @@ import {Device} from 'ui/device.ui';
 
 import {GlobalPopupHelper} from './';
 import navigationHelper from './navigation.helper';
-import {logEventAnalytics, sendEventToFirestore} from './system.helper';
-import {setIsPremium} from "store/reducer/system.reducer.store";
+import {logEventAnalytics, PRODUCTS_QUESTION, sendEventToFirestore} from './system.helper';
+import {setFreeSummaryCount, setIsPremium} from "store/reducer/system.reducer.store";
 
 export const usePurchase = (isFocus) => {
     const {
@@ -49,10 +49,18 @@ export const usePurchase = (isFocus) => {
                         navigationHelper.replace(NAVIGATION_PREMIUM_SUCCESS_SCREEN)
                     }
                     if (typeBuy.current == "product") {
-                        GlobalPopupHelper.alert({
-                            type: "success",
-                            message: "Thanks for your donation"
-                        })
+                        if(currentPurchase?.productId === PRODUCTS_QUESTION[0]){
+                            dispatch(setFreeSummaryCount(3 * (JSON.parse(currentPurchase?.dataAndroid || "{}")?.quantity || 1)))
+                            GlobalPopupHelper.alert({
+                                type: "success",
+                                message: `You have successfully purchased ${3 * (JSON.parse(currentPurchase?.dataAndroid || "{}")?.quantity || 1)} books`
+                            })
+                        }else {
+                            GlobalPopupHelper.alert({
+                                type: "success",
+                                message: "Thanks for your donation"
+                            })
+                        }
                     }
 
                     await finishTransaction({
