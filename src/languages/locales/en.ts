@@ -149,7 +149,7 @@ export default {
   settingScreen: {
     system: "Setting system",
     version: "Version: ",
-    createdLove: "Created with love from\nZipEnter and Annie's Papa!",
+    createdLove: "Created with love from ZipEnter",
     aboutUs: "About Us",
     termOfUse: "Terms Of Use",
     privacyPolicy: "Privacy Policy",

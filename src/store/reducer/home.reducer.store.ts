@@ -62,7 +62,7 @@ export const setNameOfChatRoom = createAsyncThunk(
             "messages": [{"role": "user", "content": contentFirstValue}]
         }
 
-        let responseName = await axios.post(`https://api.openai.com/v1/chat/completions`, data, {
+        let responseName = await axios.post(`https://best-suggest.net/api/gpt/chat/completions`, data, {
             headers: {
                 Authorization: `Bearer ${tokenGPT}`,
                 "Content-Type": "application/json",
@@ -226,7 +226,7 @@ export const questionToChatGPT = createAsyncThunk(
         delete newData._id
         delete newData.key
         const response = await axios.post(
-            `https://api.openai.com/v1/chat/completions`,
+            `https://best-suggest.net/api/gpt/chat/completions`,
             newData,
             {
                 headers: {

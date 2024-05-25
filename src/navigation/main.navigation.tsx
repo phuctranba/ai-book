@@ -36,7 +36,7 @@ import DrawerContent from './drawer.content';
 import HistoryScreen from 'screens/history/history.screen';
 import {RouteProp, useRoute} from "@react-navigation/native";
 import {GlobalPopupHelper} from "helpers/index";
-import {useAppSelector} from "configs/store.config";
+import {useAppDispatch, useAppSelector} from "configs/store.config";
 import SettingsFontSizeScreen from "screens/settingFontSize/settingsFontSize.screen";
 import SettingsSpeedScreen from "screens/settingSpeed/settingsSpeed.screen";
 import SettingsFontScreen from "screens/settingFont/settingsFont.screen";
@@ -46,6 +46,7 @@ import PremiumSuccessScreen from "screens/premiumSuccess/premiumSuccess.screen";
 import navigationHelper from "helpers/navigation.helper";
 import WelcomeScreen from "screens/welcome/welcome.screen";
 import EcosystemScreen from "screens/ecosystem/ecosystem.screen";
+import {setFirstInstall} from "store/reducer/system.reducer.store";
 
 
 const Drawer = createDrawerNavigator();
@@ -99,11 +100,17 @@ const MainNavigator = () => {
     const {theme} = useSystem()
     const route = useRoute<RouteProp<{ item: { shouldGoToTrueScreenAfterReConnect: boolean } }>>()
     const shouldGoToTrueScreenAfterReConnect = route.params?.shouldGoToTrueScreenAfterReConnect
-    const {native_ads_country} = useDisplayAds()
     const fontName = useAppSelector(state => state.system.fontName)
     const isPremium = useAppSelector(state => state.system.isPremium)
-    const shouldShowWelcome = useAppSelector(state => state.system.shouldShowWelcome);
-    const chooseCountry = useAppSelector(state => state.system.firstInstall.chooseCountry);
+  const dispatch = useAppDispatch();
+  const firstInstall = useAppSelector(state => state.system.firstInstall)
+  useEffect(() => {
+    if(!firstInstall.chooseCountry){
+      setTimeout(()=>{
+        dispatch(setFirstInstall({chooseCountry: true}))
+      },5000)
+    }
+  }, []);
 
     useEffect(() => {
         if (shouldGoToTrueScreenAfterReConnect) {
@@ -119,17 +126,13 @@ const MainNavigator = () => {
             return;
         }
 
-        if (native_ads_country && !chooseCountry) {
-            GlobalPopupHelper.admobGlobalRef.current?.showOpenAds(NAVIGATION_CHOOSE_COUNTRY_SCREEM)
-            return;
-        }
 
         GlobalPopupHelper.admobGlobalRef.current?.showOpenAds(NAVIGATION_PREMIUM_SERVICE_SCREEN)
     }
 
     return (
         <MainStack.Navigator
-            initialRouteName={isPremium ? "DrawerNavigator" : ((native_ads_country && !chooseCountry) ? NAVIGATION_CHOOSE_COUNTRY_SCREEM : (shouldShowWelcome ? NAVIGATION_WELCOME : NAVIGATION_PREMIUM_SERVICE_SCREEN))}
+          initialRouteName={isPremium || !firstInstall.chooseCountry ? "DrawerNavigator" : NAVIGATION_PREMIUM_SERVICE_SCREEN}
             screenOptions={{
                 headerStyle: {
                     borderBottomWidth: StyleSheet.hairlineWidth,

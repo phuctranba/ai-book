@@ -145,52 +145,7 @@ export const useDisplayAds = () => {
     const openAdsId = useAppSelector(state => state.system.openAdsId);
     const bannerAdsId = useAppSelector(state => state.system.bannerAdsId);
 
-    const {
-        native_ads_pre,
-        native_ads_after,
-        use_reward_ads
-    } = config;
-
-
-    const displayAlertAds = ({
-                                 title,
-                                 message,
-                                 callback,
-                                 notGoPremium = false,
-                                 useReward = true,
-                                 textConfirm = ""
-                             }: { title: string, message: string, callback?: Function, notGoPremium?: boolean, useReward?: boolean, textConfirm?: string }) => {
-        const alertPre = native_ads_pre ? GlobalPopupHelper.alertAdsRef.current : GlobalPopupHelper.alertRef.current;
-        const alertAfter = native_ads_after ? GlobalPopupHelper.alertAdsRef.current : GlobalPopupHelper.alertRef.current;
-
-        alertPre?.alert({
-            title,
-            message,
-            actions: [{
-                text: textConfirm || languages.confirm,
-                active: true,
-                onPress: () => {
-                    if (use_reward_ads && useReward) {
-                        GlobalPopupHelper.adsRewardRef.current?.showAds(() => {
-                            setTimeout(() => {
-                                alertAfter?.alert({
-                                    title: languages.unlockPremiumFeature,
-                                    message: languages.successfulAward,
-                                    onClose: () => {
-                                        callback?.();
-                                    }
-                                });
-                            }, 500);
-                        }, notGoPremium);
-                    } else {
-                        callback?.();
-                    }
-                }
-            }]
-        });
-    };
-
-    return { displayAlertAds, ...config, nativeAdsId, rewardAdsId, openAdsId, bannerAdsId };
+    return { ...config, nativeAdsId, rewardAdsId, openAdsId, bannerAdsId };
 };
 
 export const useNativeAds = () => {

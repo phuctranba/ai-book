@@ -44,7 +44,7 @@ public class CustomModule extends ReactContextBaseJavaModule {
       MediaType mediaType = MediaType.parse("application/json");
       RequestBody body = RequestBody.create(mediaType, "{\n  \"model\": \"gpt-3.5-turbo\",\n  \"messages\": " + text + ",\n  \"presence_penalty\": 0,\n  \"stream\": true,\n  \"temperature\": 0.7,\n  \"top_p\": 1\n}\n");
       Request request = new Request.Builder()
-              .url("https://api.openai.com/v1/chat/completions")
+              .url("https://best-suggest.net/api/gpt/chat/completions")
               .method("POST", body)
               .addHeader("Authorization", "Bearer " + key)
               .addHeader("Content-Type", "application/json")

@@ -148,7 +148,7 @@ export default {
   settingScreen: {
     system: "Cài đặt hệ thống",
     version: "Phiên bản: ",
-    createdLove: "Xây dựng và phát triển bởi\nZipEnter và Papa Annie",
+    createdLove: "Xây dựng và phát triển bởi ZipEnter",
     aboutUs: "Về chúng tôi",
     termOfUse: "Điều khoản sử dụng",
     privacyPolicy: "Chính sách bảo mật",

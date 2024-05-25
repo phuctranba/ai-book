@@ -72,10 +72,7 @@ const App = () => {
                         <WrapDropdown ref={GlobalPopupHelper.globalAlertRef}/>
                         <WrapAlertView ref={GlobalPopupHelper.alertRef}/>
                         <AlertViewAds ref={GlobalPopupHelper.alertAdsRef}/>
-                        <AdsReward ref={GlobalPopupHelper.adsRewardRef}/>
                         <WrapActionSheetView ref={GlobalPopupHelper.actionSheetRef}/>
-                        <OpenAppAds ref={GlobalPopupHelper.admobGlobalRef}/>
-                        <GiftFirstOpenScreen ref={GlobalPopupHelper.giftFirstOpenScreenRef} />
                         <DisconectNetworkScreen/>
                         <StatusApplicationScreen ref={GlobalPopupHelper.statusApplicationScreenRef} />
                     </PersistGate>

@@ -53,7 +53,6 @@ const SummaryScreen = () => {
     const freeSummaryCount = useAppSelector(state => state.system.freeSummaryCount)
     const showModalRate = useAppSelector(state => state.control.showModalRate)
     const {
-        displayAlertAds,
         chatgpt_key,
         key_google_cloud
     } = useDisplayAds()
@@ -367,17 +366,7 @@ const SummaryScreen = () => {
                 }
             }, 1000)
         } else {
-            if (refIsPremium.current) {
-                onConfirmCopy();
-                return;
-            }
-
-            logEventAnalytics(EnumAnalyticEvent.CopyChat)
-            displayAlertAds({
-                title: languages.homeScreen.copyChat,
-                message: languages.homeScreen.copyChatDes,
-                callback: onConfirmCopy
-            })
+            onConfirmCopy();
         }
     }
 

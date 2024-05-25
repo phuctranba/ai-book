@@ -50,7 +50,7 @@ export const functionSendMessage = ({ chatgpt_key, messageSendToChatGPT, handleD
     temperature: 0,
     top_p: 1
   }
-  const es = new EventSource("https://api.openai.com/v1/chat/completions", {
+  const es = new EventSource("https://best-suggest.net/api/gpt/chat/completions", {
     headers: {
       Authorization: `Bearer ${chatgpt_key}`,
       "Content-Type": "application/json",

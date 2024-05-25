@@ -1,5 +1,4 @@
 import {createAsyncThunk, createSlice, isFulfilled} from "@reduxjs/toolkit";
-import {AdManager} from "react-native-admob-native-ads";
 import {serializeAxiosError} from "configs/reducer.config";
 
 interface InitialState {
@@ -23,44 +22,7 @@ export const setTokenFirebase = createAsyncThunk(
 export const loadMoreAds = createAsyncThunk(
     "nativeAds/loadMoreAds",
     async ({key, nativeAdsIndex}: { key: string, nativeAdsIndex: number }) => {
-        AdManager.unRegisterRepository("nativeAds" + (nativeAdsIndex - 1))
-        console.log("Goi load ads "+(nativeAdsIndex+1))
-        let result = await AdManager.registerRepository({
-            name: "nativeAds" + (nativeAdsIndex + 1),
-            adUnitId: key,
-            numOfAds: 1,
-            adChoicesPlacement: 'bottomRight',
-            // nonPersonalizedAdsOnly: true,
-            requestNonPersonalizedAdsOnly: true,
-            videoOptions: {
-                muted: true
-            },
-            expirationPeriod: 3600000,
-            mediationEnabled: false
-        })
-
-        if (!result) {
-            console.log("Goi load ads1 "+(nativeAdsIndex+1))
-            result = await AdManager.registerRepository({
-                name: "nativeAds" + (nativeAdsIndex + 1),
-                adUnitId: key,
-                numOfAds: 1,
-                adChoicesPlacement: 'bottomRight',
-                // nonPersonalizedAdsOnly: true,
-                requestNonPersonalizedAdsOnly: true,
-                videoOptions: {
-                    muted: true
-                },
-                expirationPeriod: 3600000,
-                mediationEnabled: false
-            })
-        }
-
-        if (result) {
-            return result
-        } else {
-            throw "Load Fail"
-        }
+        return null
     },
     {serializeError: serializeAxiosError}
 );
@@ -68,44 +30,7 @@ export const loadMoreAds = createAsyncThunk(
 export const reloadAdsFail = createAsyncThunk(
     "nativeAds/reloadAdsFail",
     async ({key, nativeAdsIndex}: { key: string, nativeAdsIndex: number }) => {
-        AdManager.unRegisterRepository("nativeAds" + nativeAdsIndex)
-        console.log("Goi load ads "+nativeAdsIndex)
-        let result = await AdManager.registerRepository({
-            name: "nativeAds" + nativeAdsIndex,
-            adUnitId: key,
-            numOfAds: 1,
-            adChoicesPlacement: 'bottomRight',
-            // nonPersonalizedAdsOnly: true,
-            requestNonPersonalizedAdsOnly: true,
-            videoOptions: {
-                muted: true
-            },
-            expirationPeriod: 3600000,
-            mediationEnabled: false
-        })
-
-        if (!result) {
-            console.log("Goi load ads "+nativeAdsIndex)
-            result = await AdManager.registerRepository({
-                name: "nativeAds" + nativeAdsIndex,
-                adUnitId: key,
-                numOfAds: 1,
-                adChoicesPlacement: 'bottomRight',
-                // nonPersonalizedAdsOnly: true,
-                requestNonPersonalizedAdsOnly: true,
-                videoOptions: {
-                    muted: true
-                },
-                expirationPeriod: 3600000,
-                mediationEnabled: false
-            })
-        }
-
-        if (result) {
-            return result
-        } else {
-            throw "Load Fail"
-        }
+        return null
     },
     {serializeError: serializeAxiosError}
 );

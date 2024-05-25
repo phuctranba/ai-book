@@ -56,18 +56,13 @@ function AppNavigation() {
     const theme = useAppSelector(state => state.system.theme)
     const subscriptionIds = useAppSelector(state => state.system.subscriptionIds)
     const fontName = useAppSelector(state => state.system.fontName)
-    const isPremium = useAppSelector(state => state.system.isPremium)
-    const {native_ads_country} = useDisplayAds()
-    const chooseCountry = useAppSelector(state => state.system.firstInstall.chooseCountry);
-    const shouldShowWelcome = useAppSelector(state => state.system.shouldShowWelcome)
-    const isReceivedAWelcomeGift = useAppSelector(state => state.system.isReceivedAWelcomeGift)
+
     const dispatch = useAppDispatch()
     const status_application = useAppSelector(state => state.system.config.status_application);
 
     /**
      * Để đây cho nó Impression
      */
-    const stateToImpression = useAppSelector(state => state.system.stateToImpression)
 
     const {initIAP} = usePurchase(false)
 
@@ -96,16 +91,6 @@ function AppNavigation() {
 
         getConfigEcosystem()
 
-        if (!shouldShowWelcome && !isReceivedAWelcomeGift) {
-            let intervalShowGift = setInterval(() => {
-                if (navigationHelper.getRouteName() === NAVIGATION_HISTORY) {
-                    clearInterval(intervalShowGift)
-                    setTimeout(() => {
-                        GlobalPopupHelper.giftFirstOpenScreenRef.current?.show()
-                    }, 1000)
-                }
-            }, 2000)
-        }
     }, [])
 
     useEffect(() => {
@@ -183,9 +168,7 @@ function AppNavigation() {
     return (
         <NavigationContainer ref={navigationRef}
                              onReady={() => {
-                                 if (isPremium || !native_ads_country || chooseCountry) {
-                                     RNBootSplash.hide({fade: false});
-                                 }
+                                 RNBootSplash.hide({fade: false});
                              }}
                              onStateChange={async (state: NavigationState | undefined) => {
                                  const previousRouteName = navigationRef.current;
