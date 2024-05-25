@@ -27,7 +27,7 @@ const PremiumServiceScreen = () => {
     const subscriptionIds = useAppSelector(state => state.system.subscriptionIds)
     const subscriptionsLocal = useAppSelector(state => state.system.subscriptionsLocal)
     const isFocus = useIsFocused()
-    const {initIAP, subscriptions, buySubscription, buyProduct} = usePurchase(isFocus)
+    const {initIAP, subscriptions, products, buySubscription, buyProduct} = usePurchase(isFocus)
 
     useEffect(() => {
         if (subscriptionIds.length == 0) {
@@ -99,7 +99,7 @@ const PremiumServiceScreen = () => {
         return (
             <View key={item.productId} style={[styles.packageItem]}>
                 <TextBase title={languages.premiumScreen.autoRenew} color={theme.textInactive} fontSize={12}/>
-                <TextBase title={item.description || `${item.localizedPrice}/${item.subscriptionPeriodUnitIOS}`}
+                <TextBase title={(item?.subscriptionOfferDetails?.[0]?.pricingPhases?.pricingPhaseList?.[0]?.formattedPrice || item.description) + "/month"}
                           fontWeight="700" fontSize={16} style={{marginTop: VS._6}}/>
             </View>
         )
@@ -157,7 +157,7 @@ const PremiumServiceScreen = () => {
                         loading ? (
                             <ActivityIndicator size={"large"} color={theme.text}/>
                         ) : (
-                            <TextBase title={"Buy 3 books with 0.99$"} color={theme.text} fontSize={16}
+                            <TextBase title={"Buy 3 books with "+(products.find(item=>item?.productId === PRODUCTS[0])?.oneTimePurchaseOfferDetails?.formattedPrice || "$0.99")} color={theme.text} fontSize={16}
                                       fontWeight="600"/>
                         )
                     }

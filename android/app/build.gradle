@@ -104,8 +104,8 @@ android {
         applicationId "com.zipenter.aibook"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 20
-        versionName "1.0.7"
+        versionCode 21
+        versionName "1.0.8"
         // react-native-iap
         missingDimensionStrategy 'store', 'play'
     }

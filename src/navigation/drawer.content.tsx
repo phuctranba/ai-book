@@ -92,7 +92,7 @@ const DrawerContent = ({navigation}) => {
   const {styles, theme} = useSystem(createStyles)
   const isPremium = useAppSelector(state => state.system.isPremium)
   const isFocus = useIsFocused()
-  const {buyProduct} = usePurchase(isFocus)
+  const {buyProduct, products} = usePurchase(isFocus)
 
   const goToPremium = () => {
     navigation.replace(NAVIGATION_PREMIUM_SERVICE_SCREEN)
@@ -124,7 +124,7 @@ const DrawerContent = ({navigation}) => {
       title: languages.drawerContent.donationForUs,
       options: [
         {
-          title: "1$",
+          title: products.find(item=>item?.productId === PRODUCTS[0])?.oneTimePurchaseOfferDetails?.formattedPrice || "$1",
           onPress: () => {
             logEventAnalytics(EnumAnalyticEvent.PressConfirmDonate)
             GlobalPopupHelper.admobGlobalRef.current?.setIgnoreOneTimeAppOpenAd();
@@ -132,7 +132,7 @@ const DrawerContent = ({navigation}) => {
           },
         },
         {
-          title: "5$",
+          title: products.find(item=>item?.productId === PRODUCTS[1])?.oneTimePurchaseOfferDetails?.formattedPrice || "$5",
           onPress: () => {
             logEventAnalytics(EnumAnalyticEvent.PressConfirmDonate)
             GlobalPopupHelper.admobGlobalRef.current?.setIgnoreOneTimeAppOpenAd();
